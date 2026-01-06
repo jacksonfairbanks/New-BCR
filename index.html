@@ -769,6 +769,10 @@
                     ▶ Run Simulation
                 </button>
 
+                <button class="run-btn" id="export-btn" onclick="exportData()" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); margin-top: 10px;">
+                    📊 Export Data (CSV)
+                </button>
+
                 <!-- Seed at bottom -->
                 <div class="control-group" style="margin-top: 15px;">
                     <div class="control-label">
@@ -815,6 +819,9 @@
                         <div class="legend-item"><div class="legend-color normal"></div><span>Lognormal (GBM)</span></div>
                         <div class="legend-item"><div class="legend-color jump"></div><span>Jump Diffusion</span></div>
                         <div class="legend-item"><div class="legend-color bootstrap"></div><span>Block Bootstrap</span></div>
+                    </div>
+                    <div id="context-line" style="margin-top: 12px; padding: 12px; background: rgba(26,26,46,0.8); border-radius: 8px; border-left: 3px solid var(--accent-orange); font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+                        Run simulation to see failure probability context...
                     </div>
                     
                     <div class="data-tables-section">
@@ -1646,9 +1653,16 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
             // Calculate and display implied amplification (PPE leverage % of NAV)
             const targetBCR = parseFloat(document.getElementById('bcr').value);
             const divRate = parseFloat(document.getElementById('div-rate').value) / 100;
+            const horizonYears = parseInt(document.getElementById('horizon').value);
             const ppeLeverage = 1 / (targetBCR * divRate);
             const ppePct = ppeLeverage * 100;
             document.getElementById('stat-amplification').textContent = ppePct.toFixed(1) + '%';
+
+            // Update context line
+            const contextLine = document.getElementById('context-line');
+            const cashReserveMonths = parseInt(document.getElementById('cash-reserve').value);
+            const cashText = cashReserveMonths > 0 ? `<b>${cashReserveMonths} months cash reserves</b>` : `<b>no cash reserves</b>`;
+            contextLine.innerHTML = `At <b>${targetBCR}x BCR</b> (${ppePct.toFixed(1)}% amplification, ${(divRate*100).toFixed(0)}% dividend rate), over an <b>${horizonYears}-year horizon</b>, assuming ${cashText} and remaining obligations met through the sale of Bitcoin, the risk model projects the following probabilities of ending undercollateralized: <span style="color:#6ec6ff"><b>Lognormal ${probFailLN.toFixed(2)}%</b></span>, <span style="color:#b388ff"><b>Jump Diffusion ${probFailJ.toFixed(2)}%</b></span>, <span style="color:#81c784"><b>Block Bootstrap ${probFailB.toFixed(2)}%</b></span>.`;
         }
 
         function updatePercentileChart() {
@@ -1816,7 +1830,7 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
                 font: { family: 'Space Grotesk', color: '#a0a0b0' },
                 margin: { t: 20, r: 30, b: 50, l: 70 },
                 xaxis: { title: 'Year', gridcolor: '#2a2a3a' },
-                yaxis: { title: 'Cumulative Failure Probability (%)', gridcolor: '#2a2a3a', range: [0, Math.max(10, maxFail * 110)] },
+                yaxis: { title: 'Cumulative Failure Probability (%)', gridcolor: '#2a2a3a', range: [0, Math.max(1, maxFail * 1.2)] },
                 showlegend: true, legend: { x: 0, y: 1, bgcolor: 'rgba(0,0,0,0)' }, hovermode: 'x unified'
             }, { responsive: true });
         }
@@ -1861,6 +1875,93 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
                 },
                 showlegend: true, legend: { x: 0, y: 1, bgcolor: 'rgba(0,0,0,0)' }, hovermode: 'x unified'
             }, { responsive: true });
+        }
+
+        // ============================================
+        // EXPORT FUNCTION
+        // ============================================
+        function exportData() {
+            if (!simulationResults) {
+                alert('Please run a simulation first!');
+                return;
+            }
+
+            const r = simulationResults;
+            const p = r.params;
+            
+            // Calculate key stats
+            const probFailLN = r.lognorm.failed.filter(x => x).length / p.nSims * 100;
+            const probFailJ = r.jump.failed.filter(x => x).length / p.nSims * 100;
+            const probFailB = r.bootstrap.failed.filter(x => x).length / p.nSims * 100;
+            const ppeLeverage = 1 / (p.targetBCR * p.divRate);
+            const ppePct = ppeLeverage * 100;
+
+            // Build CSV content
+            let csv = 'BTC Treasury Risk Model - Export\n';
+            csv += '================================\n\n';
+            
+            // Parameters
+            csv += 'PARAMETERS\n';
+            csv += `Target BCR,${p.targetBCR}x\n`;
+            csv += `Dividend Rate,${(p.divRate * 100).toFixed(1)}%\n`;
+            csv += `Implied Amplification,${ppePct.toFixed(1)}%\n`;
+            csv += `Cash Reserve,${p.cashReserveMonths} months\n`;
+            csv += `Horizon,${p.horizonYears} years\n`;
+            csv += `Simulations,${p.nSims}\n`;
+            csv += `Initial NAV,$${(p.navInitial / 1e6).toFixed(1)}M\n`;
+            csv += `PPE Notional,$${(p.prefNotional / 1e6).toFixed(2)}M\n`;
+            csv += `Annual Dividend,$${(p.annualObligation / 1e6).toFixed(4)}M\n\n`;
+
+            // Failure Probabilities
+            csv += 'FAILURE PROBABILITIES\n';
+            csv += `GBM,${probFailLN.toFixed(3)}%\n`;
+            csv += `Jump Diffusion,${probFailJ.toFixed(3)}%\n`;
+            csv += `Block Bootstrap,${probFailB.toFixed(3)}%\n\n`;
+
+            // Percentile Data
+            const percentiles = [1, 5, 10, 25, 50, 75, 90, 95, 99];
+            
+            csv += 'TERMINAL BCR PERCENTILES\n';
+            csv += 'Percentile,GBM,Jump Diffusion,Bootstrap\n';
+            percentiles.forEach(pct => {
+                csv += `${pct},${percentile(r.lognorm.terminalBCR, pct).toFixed(2)},${percentile(r.jump.terminalBCR, pct).toFixed(2)},${percentile(r.bootstrap.terminalBCR, pct).toFixed(2)}\n`;
+            });
+            csv += '\n';
+
+            csv += 'MINIMUM BCR PERCENTILES\n';
+            csv += 'Percentile,GBM,Jump Diffusion,Bootstrap\n';
+            percentiles.forEach(pct => {
+                csv += `${pct},${percentile(r.lognorm.minBCR, pct).toFixed(2)},${percentile(r.jump.minBCR, pct).toFixed(2)},${percentile(r.bootstrap.minBCR, pct).toFixed(2)}\n`;
+            });
+            csv += '\n';
+
+            csv += 'TERMINAL NAV PERCENTILES ($M)\n';
+            csv += 'Percentile,GBM,Jump Diffusion,Bootstrap\n';
+            percentiles.forEach(pct => {
+                csv += `${pct},${(percentile(r.lognorm.terminalNAV, pct) / 1e6).toFixed(2)},${(percentile(r.jump.terminalNAV, pct) / 1e6).toFixed(2)},${(percentile(r.bootstrap.terminalNAV, pct) / 1e6).toFixed(2)}\n`;
+            });
+            csv += '\n';
+
+            // Cumulative Failure by Year
+            csv += 'CUMULATIVE FAILURE BY YEAR (%)\n';
+            csv += 'Year,GBM,Jump Diffusion,Bootstrap\n';
+            for (let y = 1; y <= p.horizonYears; y++) {
+                const monthIdx = y * 12;
+                if (monthIdx < r.lognorm.failureByMonth.length) {
+                    csv += `${y},${(r.lognorm.failureByMonth[monthIdx] * 100).toFixed(3)},${(r.jump.failureByMonth[monthIdx] * 100).toFixed(3)},${(r.bootstrap.failureByMonth[monthIdx] * 100).toFixed(3)}\n`;
+                }
+            }
+
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `btc-risk-model-${p.targetBCR}x-bcr-${(p.divRate*100).toFixed(0)}pct-div.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         // ============================================
