@@ -2087,128 +2087,67 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
 
             const metric = document.getElementById('metric-select').value;
             const r = simulationResults;
-            const isNAV = (metric === 'terminal-nav');
 
-            let lnData, jData, bData, yLabel;
-            if (metric === 'terminal-bcr') {
-                lnData = r.lognorm.terminalBCR; 
-                jData = r.jump.terminalBCR; 
-                bData = r.bootstrap.terminalBCR;
-                yLabel = 'Terminal BCR (x)';
-            } else if (metric === 'min-bcr') {
-                lnData = r.lognorm.minBCR; 
-                jData = r.jump.minBCR; 
-                bData = r.bootstrap.minBCR;
-                yLabel = 'Minimum BCR (x)';
-            } else if (metric === 'terminal-nav') {
-                lnData = r.lognorm.terminalNAV; 
-                jData = r.jump.terminalNAV; 
-                bData = r.bootstrap.terminalNAV;
-                yLabel = 'Terminal NAV ($)';
+            let lnData, jData, bData, yLabel, failureY, failureName;
+            
+            switch (metric) {
+                case 'terminal-bcr':
+                    lnData = r.lognorm.terminalBCR; 
+                    jData = r.jump.terminalBCR; 
+                    bData = r.bootstrap.terminalBCR;
+                    yLabel = 'Terminal BCR (x)';
+                    failureY = 1;
+                    failureName = '1.0x Threshold';
+                    break;
+                case 'min-bcr':
+                    lnData = r.lognorm.minBCR; 
+                    jData = r.jump.minBCR; 
+                    bData = r.bootstrap.minBCR;
+                    yLabel = 'Minimum BCR (x)';
+                    failureY = 1;
+                    failureName = '1.0x Threshold';
+                    break;
+                case 'terminal-nav':
+                    lnData = r.lognorm.terminalNAV; 
+                    jData = r.jump.terminalNAV; 
+                    bData = r.bootstrap.terminalNAV;
+                    yLabel = 'Terminal NAV ($)';
+                    // Calculate annual dividend for failure line
+                    const navInit = parseFloat(document.getElementById('treasury-scale').value) * 1e9;
+                    const amp = parseFloat(document.getElementById('amplification').value) / 100;
+                    const div = parseFloat(document.getElementById('div-rate').value) / 100;
+                    failureY = navInit * amp * div;
+                    failureName = 'Failure ($' + (failureY / 1e9).toFixed(1) + 'B)';
+                    break;
             }
             
-            // Update chart title based on metric
-            const chartTitles = {
-                'terminal-bcr': 'Terminal BCR Percentile Curves',
-                'min-bcr': 'Minimum BCR Percentile Curves',
-                'terminal-nav': 'Terminal NAV Percentile Curves'
-            };
-            document.getElementById('percentile-chart-title').textContent = chartTitles[metric];
+            // Update chart title
+            document.getElementById('percentile-chart-title').textContent = 
+                metric === 'terminal-nav' ? 'Terminal NAV Percentile Curves' :
+                metric === 'min-bcr' ? 'Minimum BCR Percentile Curves' : 
+                'Terminal BCR Percentile Curves';
 
-            // Use all 99 percentiles for smooth curves
             const pcts = Array.from({ length: 99 }, (_, i) => i + 1);
-            
-            // Key percentiles for x-axis ticks
             const tickVals = [1, 5, 10, 25, 50, 75, 90, 95, 99];
-            const tickLabels = tickVals.map(p => p + '%');
-
-            // Calculate Y values - ensure no zeros for log scale
-            const getYValues = (data) => pcts.map(p => Math.max(percentile(data, p), 0.01));
 
             const traces = [
-                { 
-                    x: pcts, 
-                    y: getYValues(lnData), 
-                    name: 'Lognormal', 
-                    line: { color: '#4a9eff', width: 2.5 },
-                    type: 'scatter', mode: 'lines'
-                },
-                { 
-                    x: pcts, 
-                    y: getYValues(jData), 
-                    name: 'Jump Diffusion', 
-                    line: { color: '#a855f7', width: 2.5 },
-                    type: 'scatter', mode: 'lines'
-                },
-                { 
-                    x: pcts, 
-                    y: getYValues(bData), 
-                    name: 'Bootstrap', 
-                    line: { color: '#00d4aa', width: 2.5 },
-                    type: 'scatter', mode: 'lines'
-                }
-            ];
+                { x: pcts, y: pcts.map(p => percentile(lnData, p)), name: 'Lognormal', line: { color: '#4a9eff', width: 2.5 } },
+                { x: pcts, y: pcts.map(p => percentile(jData, p)), name: 'Jump Diffusion', line: { color: '#a855f7', width: 2.5 } },
+                { x: pcts, y: pcts.map(p => percentile(bData, p)), name: 'Bootstrap', line: { color: '#00d4aa', width: 2.5 } },
+                { x: [1, 99], y: [failureY, failureY], name: failureName, line: { color: '#ff4757', width: 2, dash: 'dash' } }
+            ].map(t => ({ ...t, type: 'scatter', mode: 'lines' }));
 
-            // Add failure threshold line
-            let failureValue, failureName;
-            if (isNAV) {
-                const navInitial = parseFloat(document.getElementById('treasury-scale').value) * 1e9;
-                const amplification = parseFloat(document.getElementById('amplification').value) / 100;
-                const divRate = parseFloat(document.getElementById('div-rate').value) / 100;
-                const prefNotional = navInitial * amplification;
-                failureValue = prefNotional * divRate; // annual dividend
-                failureName = 'Failure ($' + (failureValue / 1e9).toFixed(1) + 'B)';
-            } else {
-                failureValue = 1;
-                failureName = '1.0x Threshold';
-            }
-            
-            traces.push({
-                x: [1, 99], 
-                y: [failureValue, failureValue],
-                name: failureName, 
-                type: 'scatter', 
-                mode: 'lines',
-                line: { color: '#ff4757', width: 2, dash: 'dash' }
-            });
-
-            // Build Y-axis config separately for clarity
-            const yAxisConfig = {
-                title: yLabel,
-                gridcolor: '#2a2a3a',
-                type: 'log'
-            };
-            
-            if (isNAV) {
-                // For NAV: show dollars with SI notation ($1B, $10B, etc)
-                yAxisConfig.tickprefix = '$';
-                yAxisConfig.exponentformat = 'SI';
-            } else {
-                // For BCR: just show numbers, add "x" in title
-                yAxisConfig.exponentformat = 'none';
-            }
-
-            const layout = {
+            Plotly.react('percentile-chart', traces, {
                 paper_bgcolor: 'rgba(0,0,0,0)', 
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { family: 'Space Grotesk', color: '#a0a0b0' },
-                margin: { t: 20, r: 30, b: 50, l: 90 },
-                xaxis: { 
-                    title: 'Percentile (%)', 
-                    gridcolor: '#2a2a3a',
-                    tickvals: tickVals,
-                    ticktext: tickLabels
-                },
-                yaxis: yAxisConfig,
+                margin: { t: 20, r: 30, b: 50, l: 80 },
+                xaxis: { title: 'Percentile (%)', gridcolor: '#2a2a3a', tickvals: tickVals, ticktext: tickVals.map(p => p + '%') },
+                yaxis: { title: yLabel, gridcolor: '#2a2a3a', type: 'log' },
                 showlegend: true,
                 legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(0,0,0,0.5)' },
                 hovermode: 'x unified'
-            };
-
-            // Clear and redraw
-            const chartDiv = document.getElementById('percentile-chart');
-            Plotly.purge(chartDiv);
-            Plotly.newPlot(chartDiv, traces, layout, { responsive: true });
+            }, { responsive: true });
         }
 
         function updatePercentileTable() {
