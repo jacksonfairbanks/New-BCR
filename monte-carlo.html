@@ -2153,7 +2153,7 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
                 yaxis: { 
                     title: yLabel, 
                     gridcolor: '#2a2a3a', 
-                    type: metric === 'terminal-nav' ? 'linear' : 'log', 
+                    type: 'log', 
                     tickformat: metric === 'terminal-nav' ? '$.2s' : '.1f' 
                 },
                 showlegend: true,
