@@ -139,6 +139,12 @@
             background: rgba(46, 204, 113, 0.1);
             border-radius: 4px;
             cursor: help;
+            white-space: pre-line;
+        }
+
+        .live-indicator.offline {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
         }
 
         .control-section {
@@ -1309,35 +1315,83 @@
                     console.warn('Using fallback rates:', data.error);
                 }
                 
+                // Track which tickers have live data
+                const liveStatus = {
+                    SATA: data.debug?.SATA?.found || false,
+                    STRC: data.debug?.STRC?.found || false,
+                    STRD: data.debug?.STRD?.found || false,
+                    STRF: data.debug?.STRF?.found || false
+                };
+                
                 // Update product rates with live data
                 if (data.SATA) PRODUCTS.SATA.annualRate = data.SATA;
                 if (data.STRC) PRODUCTS.STRC.annualRate = data.STRC;
                 if (data.STRD) PRODUCTS.STRD.annualRate = data.STRD;
                 if (data.STRF) PRODUCTS.STRF.annualRate = data.STRF;
                 
-                // Update the yield displays in buttons
-                document.querySelector('[data-product="SATA"] .yield').textContent = (PRODUCTS.SATA.annualRate * 100).toFixed(2) + '% APY';
-                document.querySelector('[data-product="STRC"] .yield').textContent = (PRODUCTS.STRC.annualRate * 100).toFixed(2) + '% APY';
-                document.querySelector('[data-product="STRD"] .yield').textContent = (PRODUCTS.STRD.annualRate * 100).toFixed(2) + '% APY';
-                document.querySelector('[data-product="STRF"] .yield').textContent = (PRODUCTS.STRF.annualRate * 100).toFixed(2) + '% APY';
+                // Store live status in products
+                PRODUCTS.SATA.isLive = liveStatus.SATA;
+                PRODUCTS.STRC.isLive = liveStatus.STRC;
+                PRODUCTS.STRD.isLive = liveStatus.STRD;
+                PRODUCTS.STRF.isLive = liveStatus.STRF;
                 
-                // Show live indicator
-                if (data.source === 'MASSIVE API') {
-                    const statusEl = document.createElement('div');
-                    statusEl.className = 'live-indicator';
-                    statusEl.innerHTML = '🟢 Live Rates';
-                    statusEl.title = 'Last updated: ' + new Date(data.lastUpdated).toLocaleString();
-                    const header = document.querySelector('.panel-title');
-                    if (!document.querySelector('.live-indicator')) {
-                        header.appendChild(statusEl);
-                    }
+                // Store prices if available
+                if (data.prices) {
+                    PRODUCTS.SATA.price = data.prices.SATA;
+                    PRODUCTS.STRC.price = data.prices.STRC;
+                    PRODUCTS.STRD.price = data.prices.STRD;
+                    PRODUCTS.STRF.price = data.prices.STRF;
                 }
+                
+                // Update the yield displays in buttons with live indicators
+                const tickers = ['SATA', 'STRC', 'STRD', 'STRF'];
+                tickers.forEach(ticker => {
+                    const btn = document.querySelector(`[data-product="${ticker}"]`);
+                    const yieldEl = btn.querySelector('.yield');
+                    const rate = (PRODUCTS[ticker].annualRate * 100).toFixed(2);
+                    const liveIcon = liveStatus[ticker] ? '🟢' : '🟡';
+                    yieldEl.innerHTML = `${liveIcon} ${rate}%`;
+                });
+                
+                // Show overall status indicator
+                const liveCount = Object.values(liveStatus).filter(v => v).length;
+                const statusEl = document.createElement('div');
+                statusEl.className = 'live-indicator';
+                
+                if (liveCount === 4) {
+                    statusEl.innerHTML = '🟢 All Live';
+                } else if (liveCount > 0) {
+                    statusEl.innerHTML = `🟡 ${liveCount}/4 Live`;
+                } else {
+                    statusEl.innerHTML = '🔴 Offline';
+                }
+                statusEl.title = 'Last updated: ' + new Date(data.lastUpdated).toLocaleString() + '\n' +
+                    'SATA: ' + (liveStatus.SATA ? 'Live' : 'Fallback') + '\n' +
+                    'STRC: ' + (liveStatus.STRC ? 'Live' : 'Fallback') + '\n' +
+                    'STRD: ' + (liveStatus.STRD ? 'Live' : 'Fallback') + '\n' +
+                    'STRF: ' + (liveStatus.STRF ? 'Live' : 'Fallback');
+                
+                const header = document.querySelector('.panel-title');
+                const existingIndicator = document.querySelector('.live-indicator');
+                if (existingIndicator) existingIndicator.remove();
+                header.appendChild(statusEl);
                 
                 // Recalculate with new rates
                 selectProduct(currentProduct);
                 
             } catch (err) {
                 console.error('Failed to fetch live yields:', err);
+                
+                // Show offline indicator
+                const statusEl = document.createElement('div');
+                statusEl.className = 'live-indicator offline';
+                statusEl.innerHTML = '🔴 Offline';
+                statusEl.title = 'Could not connect to API';
+                const header = document.querySelector('.panel-title');
+                const existingIndicator = document.querySelector('.live-indicator');
+                if (existingIndicator) existingIndicator.remove();
+                header.appendChild(statusEl);
+                
                 // Continue with default rates
                 selectProduct('SATA');
             }
