@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$SATA Compound Calculator</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --border-color: #2a2a3a;
+            --text-primary: #ffffff;
+            --text-light: #e0e0e0;
+            --text-muted: #888899;
+            --accent-gold: #ffd700;
+            --accent-gold-dim: rgba(255, 215, 0, 0.2);
+            --accent-green: #2ecc71;
+            --accent-green-dim: rgba(46, 204, 113, 0.2);
+            --accent-blue: #4a9eff;
+            --accent-purple: #a855f7;
+            --accent-orange: #ff9f43;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-title .icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-gold) 0%, #b8860b 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 30px var(--accent-gold-dim);
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-gold) 0%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header h1 span {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            -webkit-text-fill-color: var(--text-muted);
+        }
+
+        .header-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 15px;
+            font-size: 0.85rem;
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .header-links a:hover {
+            color: var(--accent-gold);
+            border-color: var(--accent-gold);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .control-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent-gold);
+        }
+
+        .panel-title::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: var(--accent-gold);
+            border-radius: 2px;
+        }
+
+        .live-indicator {
+            font-size: 0.7rem;
+            color: #2ecc71;
+            margin-left: auto;
+            padding: 4px 8px;
+            background: rgba(46, 204, 113, 0.1);
+            border-radius: 4px;
+            cursor: help;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .control-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .control-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-gold);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--accent-gold-dim);
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--accent-gold);
+        }
+
+        .principal-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .principal-input-row .input-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .principal-input-row input[type="number"] {
+            flex: 1;
+            padding: 8px 10px;
+            font-size: 0.85rem;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-gold-dim);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+
+        .toggle-btn:hover:not(.active) {
+            border-color: var(--text-muted);
+        }
+
+        .product-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .product-group {
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .product-group-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .product-btn {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .product-btn .ticker {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .product-btn .yield {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .product-btn:hover {
+            border-color: var(--accent-gold);
+            color: var(--text-light);
+        }
+
+        .product-btn.active {
+            background: var(--accent-gold-dim);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+
+        .product-btn.active .ticker,
+        .product-btn.active .yield {
+            color: var(--accent-gold);
+        }
+
+        /* Strife products - different visual style */
+        .strife-group {
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.08) 0%, rgba(74, 158, 255, 0.02) 100%);
+            border: 1px solid rgba(74, 158, 255, 0.2);
+        }
+
+        .strife-group .product-group-label {
+            color: var(--accent-blue);
+        }
+
+        .product-btn-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .product-btn.strife {
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 8px;
+        }
+
+        .product-btn.strife .ticker {
+            font-size: 0.85rem;
+        }
+
+        .product-btn.strife .yield {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .product-btn.strife:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .product-btn.strife.active {
+            background: rgba(74, 158, 255, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .product-btn.strife.active .ticker,
+        .product-btn.strife.active .yield {
+            color: var(--accent-blue);
+        }
+
+        .product-info {
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, #1a1a28 100%);
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid var(--accent-gold-dim);
+            transition: border-color 0.3s;
+        }
+
+        .product-info.strife-style {
+            border-color: rgba(74, 158, 255, 0.3);
+        }
+
+        .product-info.strife-style .product-info-value {
+            color: var(--accent-blue);
+        }
+
+        .product-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .product-info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .product-info-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .product-info-value {
+            color: var(--accent-gold);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        .charts-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .stat-value.gold { color: var(--accent-gold); }
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.blue { color: var(--accent-blue); }
+        .stat-value.purple { color: var(--accent-purple); }
+
+        .stat-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 400px;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .schedule-table th {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            text-align: left;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .schedule-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-light);
+        }
+
+        .schedule-table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        .schedule-table .year-row td {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .tax-note {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, rgba(46, 204, 113, 0.02) 100%);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .tax-note strong {
+            color: var(--accent-green);
+        }
+
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 0;
+        }
+
+        .collapsible-header:hover .chart-title {
+            color: var(--accent-gold);
+        }
+
+        .collapse-icon {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            transition: transform 0.3s;
+        }
+
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+        }
+
+        .income-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .income-summary-row {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+        }
+
+        .income-label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .income-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .income-value.green {
+            color: var(--accent-green);
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">
+            <div class="icon">💰</div>
+            <h1>$SATA Compound Calculator <span>| 12% APY Tax-Deferred</span></h1>
+        </div>
+        <div class="header-links">
+            <a href="index.html">← Home</a>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="control-panel">
+            <div class="panel-title">Investment Settings</div>
+            
+            <div class="control-section">
+                <div class="section-label">Initial Investment</div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Principal</span>
+                        <span class="control-value" id="principal-value">$100,000</span>
+                    </div>
+                    <input type="range" id="principal-slider" min="0" max="100" value="45" step="1">
+                    <div class="principal-input-row">
+                        <span class="input-label">Or enter exact amount:</span>
+                        <input type="number" id="principal" value="100000" min="1000" step="1000">
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-label">Time Horizon</div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Investment Period</span>
+                        <span class="control-value" id="years-value">30 years</span>
+                    </div>
+                    <input type="range" id="years" min="1" max="30" value="30" step="1">
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-label">Dividend Strategy</div>
+                <div class="control-group">
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" id="btn-reinvest" onclick="setStrategy('reinvest')">
+                            Reinvest Dividends
+                        </button>
+                        <button class="toggle-btn" id="btn-withdraw" onclick="setStrategy('withdraw')">
+                            Withdraw Dividends
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-label">Select Product</div>
+                <div class="product-selector">
+                    <div class="product-group" id="sata-group">
+                        <div class="product-group-label">STRIVE ($ASST)</div>
+                        <button class="product-btn active" data-product="SATA" onclick="selectProduct('SATA')">
+                            <span class="ticker">$SATA</span>
+                            <span class="yield">12% APY</span>
+                        </button>
+                    </div>
+                    <div class="product-group strife-group" id="strife-group">
+                        <div class="product-group-label">Strategy ($MSTR)</div>
+                        <div class="product-btn-row">
+                            <button class="product-btn strife" data-product="STRC" onclick="selectProduct('STRC')">
+                                <span class="ticker">$STRC</span>
+                                <span class="yield">10% APY</span>
+                            </button>
+                            <button class="product-btn strife" data-product="STRD" onclick="selectProduct('STRD')">
+                                <span class="ticker">$STRD</span>
+                                <span class="yield">13% APY</span>
+                            </button>
+                            <button class="product-btn strife" data-product="STRF" onclick="selectProduct('STRF')">
+                                <span class="ticker">$STRF</span>
+                                <span class="yield">9.58% APY</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-label" id="product-details-label">$SATA Product Details</div>
+                <div class="product-info" id="product-info">
+                    <div class="product-info-row">
+                        <span class="product-info-label">Annual Yield (APY)</span>
+                        <span class="product-info-value" id="info-apy">12.00%</span>
+                    </div>
+                    <div class="product-info-row">
+                        <span class="product-info-label">Dividend Per Period</span>
+                        <span class="product-info-value" id="info-period-rate">1.00%</span>
+                    </div>
+                    <div class="product-info-row">
+                        <span class="product-info-label">Payment Frequency</span>
+                        <span class="product-info-value" id="info-frequency">Monthly</span>
+                    </div>
+                    <div class="product-info-row">
+                        <span class="product-info-label">Tax Status</span>
+                        <span class="product-info-value" style="color: var(--accent-green);">Deferred</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-area">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Final Value</div>
+                    <div class="stat-value gold" id="stat-final">$310,585</div>
+                    <div class="stat-sub" id="stat-multiple">3.1x initial</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Earnings</div>
+                    <div class="stat-value green" id="stat-earnings">$210,585</div>
+                    <div class="stat-sub" id="stat-earnings-pct">+210.6%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Monthly Income</div>
+                    <div class="stat-value blue" id="stat-monthly">$1,000</div>
+                    <div class="stat-sub">at start</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Effective APY</div>
+                    <div class="stat-value purple" id="stat-apy">12.68%</div>
+                    <div class="stat-sub">with compounding</div>
+                </div>
+            </div>
+
+            <!-- Growth Chart -->
+            <div class="chart-card">
+                <div class="chart-title">📈 Portfolio Growth Over Time</div>
+                <div class="chart-container" id="growth-chart"></div>
+                <div class="tax-note" id="tax-note">
+                    <strong>💡 Tax-Deferred Advantage:</strong> With <span id="tax-ticker">$SATA</span>, you don't pay taxes on dividends until withdrawal. 
+                    This allows your full earnings to compound, maximizing long-term growth compared to taxable alternatives.
+                </div>
+            </div>
+
+            <!-- Yearly Schedule -->
+            <div class="chart-card">
+                <div class="collapsible-header" onclick="toggleSchedule()">
+                    <div class="chart-title">📋 Year-by-Year Breakdown</div>
+                    <span class="collapse-icon collapsed" id="schedule-icon">▼</span>
+                </div>
+                <div class="collapsible-content collapsed" id="schedule-content">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Starting Value</th>
+                                <th>Dividends Earned</th>
+                                <th>Ending Value</th>
+                                <th>Cumulative Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schedule-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Monthly Income Chart -->
+            <div class="chart-card">
+                <div class="chart-title">💵 Monthly Dividend Income Over Time</div>
+                <div class="chart-container" id="income-chart"></div>
+                <div class="income-summary">
+                    <div class="income-summary-row">
+                        <span class="income-label">Starting Monthly Income</span>
+                        <span class="income-value" id="income-start">$1,000</span>
+                    </div>
+                    <div class="income-summary-row">
+                        <span class="income-label">Final Monthly Income</span>
+                        <span class="income-value" id="income-end">$3,106</span>
+                    </div>
+                    <div class="income-summary-row">
+                        <span class="income-label">Income Growth</span>
+                        <span class="income-value green" id="income-growth">+210.6%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to darken/lighten colors
+        function shadeColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+            const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amt));
+            const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+
+        // Product Definitions
+        const PRODUCTS = {
+            SATA: {
+                name: '$SATA',
+                company: 'STRIVE ($ASST)',
+                annualRate: 0.12,
+                frequency: 'monthly',
+                periodsPerYear: 12,
+                color: '#ff9900',
+                colorDim: 'rgba(255, 153, 0, 0.2)',
+                isStrife: false
+            },
+            STRC: {
+                name: '$STRC',
+                company: 'Strategy ($MSTR)',
+                annualRate: 0.10,
+                frequency: 'monthly',
+                periodsPerYear: 12,
+                color: '#9cc0ef',
+                colorDim: 'rgba(156, 192, 239, 0.2)',
+                isStrife: true
+            },
+            STRD: {
+                name: '$STRD',
+                company: 'Strategy ($MSTR)',
+                annualRate: 0.13,
+                frequency: 'quarterly',
+                periodsPerYear: 4,
+                color: '#fe5f12',
+                colorDim: 'rgba(254, 95, 18, 0.2)',
+                isStrife: true
+            },
+            STRF: {
+                name: '$STRF',
+                company: 'Strategy ($MSTR)',
+                annualRate: 0.0958,
+                frequency: 'quarterly',
+                periodsPerYear: 4,
+                color: '#eda921',
+                colorDim: 'rgba(237, 169, 33, 0.2)',
+                isStrife: true
+            }
+        };
+
+        // State
+        let currentProduct = 'SATA';
+        let strategy = 'reinvest';
+        let scheduleCollapsed = true;
+
+        function selectProduct(ticker) {
+            currentProduct = ticker;
+            const product = PRODUCTS[ticker];
+            
+            // Update button states and colors
+            document.querySelectorAll('.product-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.borderColor = '';
+                btn.style.background = '';
+                btn.style.color = '';
+            });
+            const activeBtn = document.querySelector(`[data-product="${ticker}"]`);
+            activeBtn.classList.add('active');
+            activeBtn.style.borderColor = product.color;
+            activeBtn.style.background = product.colorDim;
+            activeBtn.style.color = product.color;
+            
+            // Update product info display
+            document.getElementById('product-details-label').textContent = `${product.name} Product Details`;
+            document.getElementById('info-apy').textContent = (product.annualRate * 100).toFixed(2) + '%';
+            
+            const periodRate = product.annualRate / product.periodsPerYear;
+            document.getElementById('info-period-rate').textContent = (periodRate * 100).toFixed(2) + '%';
+            document.getElementById('info-frequency').textContent = product.frequency.charAt(0).toUpperCase() + product.frequency.slice(1);
+            
+            // Update styling based on product color
+            const productInfo = document.getElementById('product-info');
+            const header = document.querySelector('.header h1');
+            const icon = document.querySelector('.header-title .icon');
+            
+            // Apply product-specific color
+            const color = product.color;
+            header.innerHTML = `${product.name} Compound Calculator <span>| ${(product.annualRate * 100).toFixed(2)}% APY Tax-Deferred</span>`;
+            icon.style.background = `linear-gradient(135deg, ${color} 0%, ${shadeColor(color, -30)} 100%)`;
+            icon.style.boxShadow = `0 0 30px ${product.colorDim}`;
+            
+            // Update product info border color
+            productInfo.style.borderColor = product.colorDim;
+            
+            // Update info values color
+            document.querySelectorAll('#product-info .product-info-value').forEach((el, i) => {
+                if (i < 3) { // Don't change the green "Deferred" text (4th item)
+                    el.style.color = color;
+                }
+            });
+            
+            // Update control value colors
+            document.querySelectorAll('.control-value').forEach(el => {
+                el.style.color = color;
+            });
+            
+            // Update final value stat color
+            document.getElementById('stat-final').style.color = color;
+            
+            // Update page title
+            document.title = `${product.name} Compound Calculator`;
+            
+            // Update tax note ticker
+            document.getElementById('tax-ticker').textContent = product.name;
+            
+            // Update income summary labels for quarterly products
+            const incomeLabels = document.querySelectorAll('.income-label');
+            if (product.frequency === 'quarterly') {
+                incomeLabels[0].textContent = 'Starting Monthly Equiv.';
+                incomeLabels[1].textContent = 'Final Monthly Equiv.';
+            } else {
+                incomeLabels[0].textContent = 'Starting Monthly Income';
+                incomeLabels[1].textContent = 'Final Monthly Income';
+            }
+            
+            // Recalculate
+            calculate();
+        }
+
+        function setStrategy(newStrategy) {
+            strategy = newStrategy;
+            document.getElementById('btn-reinvest').classList.toggle('active', strategy === 'reinvest');
+            document.getElementById('btn-withdraw').classList.toggle('active', strategy === 'withdraw');
+            calculate();
+        }
+
+        function toggleSchedule() {
+            scheduleCollapsed = !scheduleCollapsed;
+            document.getElementById('schedule-content').classList.toggle('collapsed', scheduleCollapsed);
+            document.getElementById('schedule-icon').classList.toggle('collapsed', scheduleCollapsed);
+        }
+
+        function formatCurrency(value) {
+            return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        }
+
+        function calculate() {
+            const product = PRODUCTS[currentProduct];
+            const principal = parseFloat(document.getElementById('principal').value) || 100000;
+            const years = parseInt(document.getElementById('years').value);
+            
+            const periodsPerYear = product.periodsPerYear;
+            const periodRate = product.annualRate / periodsPerYear;
+            const totalPeriods = years * periodsPerYear;
+            const monthsPerPeriod = 12 / periodsPerYear;
+
+            // Calculate period values (works for both monthly and quarterly)
+            const periodData = [];
+            const yearlyData = [];
+            
+            let balance = principal;
+            let totalDividends = 0;
+            let yearStartBalance = principal;
+            let yearDividends = 0;
+            let currentYear = 0;
+
+            for (let p = 0; p <= totalPeriods; p++) {
+                const monthEquivalent = p * monthsPerPeriod;
+                
+                periodData.push({
+                    period: p,
+                    month: monthEquivalent,
+                    balance: balance,
+                    totalDividends: totalDividends
+                });
+
+                // Check for year boundary
+                const yearAtPeriod = Math.floor(monthEquivalent / 12);
+                if (yearAtPeriod > currentYear && p > 0) {
+                    yearlyData.push({
+                        year: currentYear + 1,
+                        startBalance: yearStartBalance,
+                        dividends: yearDividends,
+                        endBalance: balance,
+                        cumulativeDividends: totalDividends
+                    });
+                    yearStartBalance = balance;
+                    yearDividends = 0;
+                    currentYear = yearAtPeriod;
+                }
+
+                if (p < totalPeriods) {
+                    // Calculate dividend for this period
+                    const dividend = balance * periodRate;
+                    totalDividends += dividend;
+                    yearDividends += dividend;
+
+                    if (strategy === 'reinvest') {
+                        balance += dividend;
+                    }
+                }
+            }
+
+            // Final year if there's remaining data
+            if (yearDividends > 0 || yearlyData.length < years) {
+                yearlyData.push({
+                    year: years,
+                    startBalance: yearStartBalance,
+                    dividends: yearDividends,
+                    endBalance: balance,
+                    cumulativeDividends: totalDividends
+                });
+            }
+
+            // Update stats
+            const finalValue = strategy === 'reinvest' ? balance : principal;
+            const totalEarnings = strategy === 'reinvest' ? balance - principal : totalDividends;
+            const multiple = finalValue / principal;
+            const earningsPct = (totalEarnings / principal) * 100;
+            
+            // Income per period converted to monthly equivalent
+            const periodIncome = principal * periodRate;
+            const monthlyIncomeEquiv = periodIncome / monthsPerPeriod;
+            
+            // Effective APY (with compounding)
+            const effectiveAPY = strategy === 'reinvest' 
+                ? (Math.pow(1 + periodRate, periodsPerYear) - 1) * 100 
+                : product.annualRate * 100;
+
+            document.getElementById('stat-final').textContent = formatCurrency(finalValue);
+            document.getElementById('stat-multiple').textContent = multiple.toFixed(1) + 'x initial';
+            document.getElementById('stat-earnings').textContent = formatCurrency(totalEarnings);
+            document.getElementById('stat-earnings-pct').textContent = '+' + earningsPct.toFixed(1) + '%';
+            document.getElementById('stat-monthly').textContent = formatCurrency(monthlyIncomeEquiv);
+            document.getElementById('stat-apy').textContent = effectiveAPY.toFixed(2) + '%';
+            
+            // Update income label based on frequency
+            const incomeLabel = product.frequency === 'quarterly' ? 'Monthly Equiv.' : 'Monthly Income';
+            document.querySelector('.stat-card:nth-child(3) .stat-label').textContent = incomeLabel;
+
+            // Update charts - convert to monthly data points for consistency
+            const monthlyData = interpolateToMonthly(periodData, monthsPerPeriod);
+            updateChart(monthlyData, principal, strategy, product);
+            updateIncomeChart(monthlyData, principal, strategy, product);
+
+            // Update schedule table
+            updateSchedule(yearlyData);
+        }
+
+        function interpolateToMonthly(periodData, monthsPerPeriod) {
+            if (monthsPerPeriod === 1) return periodData;
+            
+            const monthly = [];
+            for (let i = 0; i < periodData.length - 1; i++) {
+                const start = periodData[i];
+                const end = periodData[i + 1];
+                
+                for (let m = 0; m < monthsPerPeriod; m++) {
+                    const ratio = m / monthsPerPeriod;
+                    monthly.push({
+                        month: start.month + m,
+                        balance: start.balance + (end.balance - start.balance) * ratio,
+                        totalDividends: start.totalDividends + (end.totalDividends - start.totalDividends) * ratio
+                    });
+                }
+            }
+            // Add final point
+            const last = periodData[periodData.length - 1];
+            monthly.push({
+                month: last.month,
+                balance: last.balance,
+                totalDividends: last.totalDividends
+            });
+            
+            return monthly;
+        }
+
+        function updateChart(data, principal, strategy, product) {
+            const months = data.map(d => d.month);
+            const balances = data.map(d => d.balance);
+            const principalLine = data.map(() => principal);
+            
+            // Color based on product
+            const mainColor = product.color;
+            const fillColor = product.colorDim;
+
+            const traces = [
+                {
+                    x: months,
+                    y: balances,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: strategy === 'reinvest' ? 'Portfolio Value' : 'Principal',
+                    fill: 'tozeroy',
+                    fillcolor: fillColor,
+                    line: { color: mainColor, width: 3 }
+                }
+            ];
+
+            if (strategy === 'reinvest') {
+                traces.push({
+                    x: months,
+                    y: principalLine,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Initial Principal',
+                    line: { color: '#888899', width: 2, dash: 'dash' }
+                });
+            }
+
+            // Add dividend income line for withdraw strategy
+            if (strategy === 'withdraw') {
+                const cumulativeDividends = data.map(d => d.totalDividends);
+                traces.push({
+                    x: months,
+                    y: cumulativeDividends,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Cumulative Dividends',
+                    fill: 'tozeroy',
+                    fillcolor: 'rgba(46, 204, 113, 0.1)',
+                    line: { color: '#2ecc71', width: 3 }
+                });
+            }
+
+            const layout = {
+                paper_bgcolor: '#12121a',
+                plot_bgcolor: '#12121a',
+                font: { family: 'Space Grotesk, sans-serif', color: '#e0e0e0', size: 11 },
+                margin: { t: 30, r: 30, b: 50, l: 90 },
+                showlegend: true,
+                legend: {
+                    x: 0.5,
+                    y: 1.05,
+                    xanchor: 'center',
+                    orientation: 'h',
+                    bgcolor: 'transparent'
+                },
+                xaxis: {
+                    title: 'Months',
+                    gridcolor: '#2a2a3a',
+                    linecolor: '#2a2a3a',
+                    tickformat: 'd'
+                },
+                yaxis: {
+                    title: '',
+                    gridcolor: '#2a2a3a',
+                    linecolor: '#2a2a3a',
+                    tickformat: '$,.0f'
+                },
+                hovermode: 'x unified'
+            };
+
+            Plotly.newPlot('growth-chart', traces, layout, { responsive: true, displayModeBar: false });
+        }
+
+        function updateIncomeChart(data, principal, strategy, product) {
+            const periodRate = product.annualRate / product.periodsPerYear;
+            const monthsPerPeriod = 12 / product.periodsPerYear;
+            
+            // Calculate income for each data point (monthly equivalent)
+            const months = [];
+            const incomes = [];
+            
+            for (let i = 0; i < data.length; i++) {
+                const periodIncome = data[i].balance * periodRate;
+                const monthlyEquiv = periodIncome / monthsPerPeriod;
+                months.push(data[i].month);
+                incomes.push(monthlyEquiv);
+            }
+
+            const startIncome = (principal * periodRate) / monthsPerPeriod;
+            const endIncome = incomes[incomes.length - 1];
+            const incomeGrowth = ((endIncome / startIncome) - 1) * 100;
+
+            // Update summary
+            document.getElementById('income-start').textContent = formatCurrency(startIncome);
+            document.getElementById('income-end').textContent = formatCurrency(endIncome);
+            document.getElementById('income-growth').textContent = strategy === 'reinvest' 
+                ? '+' + incomeGrowth.toFixed(1) + '%' 
+                : '+0.0%';
+
+            const trace = {
+                x: months,
+                y: incomes,
+                type: 'scatter',
+                mode: 'lines',
+                name: product.frequency === 'quarterly' ? 'Monthly Equivalent' : 'Monthly Dividend',
+                fill: 'tozeroy',
+                fillcolor: 'rgba(46, 204, 113, 0.15)',
+                line: { color: '#2ecc71', width: 3 }
+            };
+
+            // Add starting income line for reference
+            const baselineLine = {
+                x: [0, months[months.length - 1]],
+                y: [startIncome, startIncome],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Starting Income',
+                line: { color: '#888899', width: 2, dash: 'dash' }
+            };
+
+            const layout = {
+                paper_bgcolor: '#12121a',
+                plot_bgcolor: '#12121a',
+                font: { family: 'Space Grotesk, sans-serif', color: '#e0e0e0', size: 11 },
+                margin: { t: 30, r: 30, b: 50, l: 70 },
+                showlegend: true,
+                legend: {
+                    x: 0.5,
+                    y: 1.05,
+                    xanchor: 'center',
+                    orientation: 'h',
+                    bgcolor: 'transparent'
+                },
+                xaxis: {
+                    title: 'Months',
+                    gridcolor: '#2a2a3a',
+                    linecolor: '#2a2a3a',
+                    tickformat: 'd'
+                },
+                yaxis: {
+                    title: '',
+                    gridcolor: '#2a2a3a',
+                    linecolor: '#2a2a3a',
+                    tickformat: '$,.0f'
+                },
+                hovermode: 'x unified'
+            };
+
+            Plotly.newPlot('income-chart', [trace, baselineLine], layout, { responsive: true, displayModeBar: false });
+        }
+
+        function updateSchedule(yearlyData) {
+            const tbody = document.getElementById('schedule-body');
+            tbody.innerHTML = yearlyData.map(d => `
+                <tr>
+                    <td style="color: var(--accent-gold);">Year ${d.year}</td>
+                    <td>${formatCurrency(d.startBalance)}</td>
+                    <td style="color: var(--accent-green);">+${formatCurrency(d.dividends)}</td>
+                    <td style="color: var(--accent-gold);">${formatCurrency(d.endBalance)}</td>
+                    <td>${formatCurrency(d.cumulativeDividends)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Exponential slider conversion (0-100 slider -> $10K to $5M)
+        const SLIDER_MIN = 10000;    // $10K
+        const SLIDER_MAX = 5000000;  // $5M
+        
+        function sliderToValue(sliderPos) {
+            // Exponential scale: more resolution at lower values
+            const minLog = Math.log(SLIDER_MIN);
+            const maxLog = Math.log(SLIDER_MAX);
+            const scale = (maxLog - minLog) / 100;
+            return Math.round(Math.exp(minLog + scale * sliderPos));
+        }
+        
+        function valueToSlider(value) {
+            const minLog = Math.log(SLIDER_MIN);
+            const maxLog = Math.log(SLIDER_MAX);
+            const scale = (maxLog - minLog) / 100;
+            return Math.round((Math.log(value) - minLog) / scale);
+        }
+
+        // Format principal for display
+        function formatPrincipalDisplay(value) {
+            if (value >= 1000000) {
+                return '$' + (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 100000) {
+                return '$' + (value / 1000).toFixed(0) + 'K';
+            } else if (value >= 1000) {
+                return '$' + (value / 1000).toFixed(1) + 'K';
+            }
+            return '$' + value.toLocaleString();
+        }
+
+        // Event listeners
+        document.getElementById('principal-slider').addEventListener('input', function() {
+            const value = sliderToValue(parseInt(this.value));
+            document.getElementById('principal').value = value;
+            document.getElementById('principal-value').textContent = formatPrincipalDisplay(value);
+            calculate();
+        });
+
+        document.getElementById('principal').addEventListener('input', function() {
+            const value = Math.max(parseInt(this.value) || SLIDER_MIN, 1000);
+            const clampedValue = Math.min(Math.max(value, SLIDER_MIN), SLIDER_MAX);
+            document.getElementById('principal-slider').value = valueToSlider(clampedValue);
+            document.getElementById('principal-value').textContent = formatPrincipalDisplay(value);
+            calculate();
+        });
+
+        document.getElementById('years').addEventListener('input', function() {
+            document.getElementById('years-value').textContent = this.value + ' years';
+            calculate();
+        });
+
+        // Fetch live yields from API
+        async function fetchLiveYields() {
+            try {
+                const response = await fetch('/api/yields');
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.warn('Using fallback rates:', data.error);
+                }
+                
+                // Update product rates with live data
+                if (data.SATA) PRODUCTS.SATA.annualRate = data.SATA;
+                if (data.STRC) PRODUCTS.STRC.annualRate = data.STRC;
+                if (data.STRD) PRODUCTS.STRD.annualRate = data.STRD;
+                if (data.STRF) PRODUCTS.STRF.annualRate = data.STRF;
+                
+                // Update the yield displays in buttons
+                document.querySelector('[data-product="SATA"] .yield').textContent = (PRODUCTS.SATA.annualRate * 100).toFixed(2) + '% APY';
+                document.querySelector('[data-product="STRC"] .yield').textContent = (PRODUCTS.STRC.annualRate * 100).toFixed(2) + '% APY';
+                document.querySelector('[data-product="STRD"] .yield').textContent = (PRODUCTS.STRD.annualRate * 100).toFixed(2) + '% APY';
+                document.querySelector('[data-product="STRF"] .yield').textContent = (PRODUCTS.STRF.annualRate * 100).toFixed(2) + '% APY';
+                
+                // Show live indicator
+                if (data.source === 'MASSIVE API') {
+                    const statusEl = document.createElement('div');
+                    statusEl.className = 'live-indicator';
+                    statusEl.innerHTML = '🟢 Live Rates';
+                    statusEl.title = 'Last updated: ' + new Date(data.lastUpdated).toLocaleString();
+                    const header = document.querySelector('.panel-title');
+                    if (!document.querySelector('.live-indicator')) {
+                        header.appendChild(statusEl);
+                    }
+                }
+                
+                // Recalculate with new rates
+                selectProduct(currentProduct);
+                
+            } catch (err) {
+                console.error('Failed to fetch live yields:', err);
+                // Continue with default rates
+                selectProduct('SATA');
+            }
+        }
+
+        // Initialize
+        fetchLiveYields();
+    </script>
+</body>
+</html>
+

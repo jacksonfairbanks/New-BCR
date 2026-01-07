@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC Treasury - Rolling Backtest</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="btc_data.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --border-color: #2a2a3a;
+            --text-primary: #ffffff;
+            --text-light: #e0e0e0;
+            --text-muted: #888899;
+            --accent-orange: #ff9f43;
+            --accent-orange-dim: rgba(255, 159, 67, 0.3);
+            --accent-blue: #4a9eff;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --accent-purple: #a855f7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-orange);
+        }
+
+        .header-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .header-links a:hover {
+            color: var(--accent-orange);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .control-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--accent-orange);
+            border-radius: 2px;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--border-color);
+        }
+
+        .control-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            margin-bottom: 18px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .control-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-orange);
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-orange-dim);
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        select:hover, select:focus {
+            border-color: var(--accent-orange);
+        }
+
+        .implied-bcr {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid var(--accent-orange-dim);
+        }
+
+        .implied-bcr-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .implied-bcr-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .implied-bcr-value {
+            color: var(--accent-orange);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .implied-bcr-sub {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .run-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent-orange) 0%, #e67e22 100%);
+            border: none;
+            border-radius: 10px;
+            color: var(--bg-dark);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .run-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px var(--accent-orange-dim);
+        }
+
+        .run-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .charts-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .summary-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .summary-highlight {
+            background: rgba(255, 159, 67, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .summary-highlight .success {
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+
+        .summary-highlight .fail {
+            color: var(--accent-red);
+            font-weight: 700;
+        }
+
+        .summary-highlight .num {
+            color: var(--accent-orange);
+            font-weight: 700;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .summary-item-label {
+            color: var(--text-muted);
+        }
+
+        .summary-item-value {
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .chart-container {
+            height: 680px;
+            width: 100%;
+        }
+
+        .context-line {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(26, 26, 46, 0.8);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-orange);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .worst-analysis {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+
+        .worst-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-red);
+            margin-bottom: 10px;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-orange);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-orange);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .export-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            border: none;
+            border-radius: 10px;
+            color: var(--bg-dark);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📈 BTC Treasury Rolling Backtest</h1>
+        <div class="header-links">
+            <a href="index.html">← Home</a>
+            <a href="monte-carlo.html">🎲 Monte Carlo</a>
+            <a href="cagr.html">📊 CAGR</a>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="control-panel">
+            <div class="panel-title">Backtest Parameters</div>
+
+            <div class="control-section">
+                <div class="section-label">Capital Structure</div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Amplification (PPE % of NAV)</span>
+                        <span class="control-value" id="val-amp">25.0%</span>
+                    </div>
+                    <input type="range" id="amp" min="5" max="100" value="25" step="1">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Dividend Rate (Annual)</span>
+                        <span class="control-value" id="val-div-rate">10.0%</span>
+                    </div>
+                    <input type="range" id="div-rate" min="1" max="30" value="10" step="0.5">
+                </div>
+
+                <div class="implied-bcr">
+                    <div class="implied-bcr-row">
+                        <span class="implied-bcr-label">Implied BCR</span>
+                        <span class="implied-bcr-value" id="implied-bcr">40.0x</span>
+                    </div>
+                    <div class="implied-bcr-sub">Years of dividend coverage</div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>% of Dividend Paid by BTC Sale</span>
+                        <span class="control-value" id="val-btc-pct">100%</span>
+                    </div>
+                    <input type="range" id="btc-pct" min="0" max="100" value="100" step="5">
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-label">Historical Period</div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Start Year</span>
+                    </div>
+                    <select id="start-year">
+                        <option value="2014" selected>2014</option>
+                        <option value="2015">2015</option>
+                        <option value="2016">2016</option>
+                        <option value="2017">2017</option>
+                        <option value="2018">2018</option>
+                        <option value="2019">2019</option>
+                        <option value="2020">2020</option>
+                        <option value="2021">2021</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>End Year</span>
+                    </div>
+                    <select id="end-year">
+                        <option value="2020">2020</option>
+                        <option value="2021">2021</option>
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                    </select>
+                </div>
+
+                <div id="data-range" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px;">
+                    Data available: Sep 2014 - Oct 2025
+                </div>
+            </div>
+
+            <button class="run-btn" id="run-btn" onclick="runBacktest()">
+                ▶ Run Rolling Backtest
+            </button>
+
+            <button class="export-btn" id="export-btn" onclick="exportData()">
+                📊 Export Results (CSV)
+            </button>
+        </div>
+
+        <div class="charts-area">
+            <div class="chart-card">
+                <div class="chart-title">Rolling Backtest Paths (% Gain from Starting NAV)</div>
+                <div class="chart-container" id="paths-chart"></div>
+                <div class="context-line" id="context-line">
+                    Run the backtest to see path analysis...
+                </div>
+            </div>
+
+            <div class="summary-card" id="summary-section">
+                <div class="summary-title">Backtest Summary</div>
+                <div class="summary-highlight" id="summary-highlight">
+                    Run the backtest to see results...
+                </div>
+                <div class="summary-grid" id="summary-grid" style="display: none;">
+                    <div class="summary-item">
+                        <span class="summary-item-label">Total Scenarios:</span>
+                        <span class="summary-item-value" id="stat-total">—</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-item-label">Success Rate:</span>
+                        <span class="summary-item-value" id="stat-success">—</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-item-label">Outperformed BTC:</span>
+                        <span class="summary-item-value" id="stat-outperform" style="color: #2ecc71;">—</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-item-label">Amplification:</span>
+                        <span class="summary-item-value" id="stat-amp">—</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-item-label">Implied BCR:</span>
+                        <span class="summary-item-value" id="stat-bcr">—</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-item-label">Dividend Rate:</span>
+                        <span class="summary-item-value" id="stat-div">—</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-item-label">Period:</span>
+                        <span class="summary-item-value" id="stat-period">—</span>
+                    </div>
+                </div>
+
+                <div class="worst-analysis" id="worst-analysis" style="display: none;">
+                    <div class="worst-title">📉 Worst Performer Analysis</div>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-item-label">Amplification to Fail:</span>
+                            <span class="summary-item-value" id="stat-amp-fail">—</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-item-label">Worst Drawdown:</span>
+                            <span class="summary-item-value" id="stat-worst-dd">—</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-item-label">Drawdown Date:</span>
+                            <span class="summary-item-value" id="stat-dd-date">—</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-item-label">Final Gain:</span>
+                            <span class="summary-item-value" id="stat-final-gain">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loading">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div>Running Rolling Backtest...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // EMBEDDED BTC HISTORICAL DATA
+        // ============================================
+        // BTC_RAW_DATA loaded from btc_data.js
+        
+        // We'll load the full data from the main file - for now using a subset
+        // The full data will be copied from btc-treasury-risk-model.html
+        
+        let monthlyData = [];
+        let backtestResult = null;
+
+        // ============================================
+        // DATA PROCESSING
+        // ============================================
+        function parseDate(dateStr) {
+            const parts = dateStr.split('-');
+            const day = parseInt(parts[0]);
+            const monthStr = parts[1];
+            const year = parseInt(parts[2]) + 2000;
+            
+            const months = {
+                'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+            };
+            
+            return new Date(year, months[monthStr], day);
+        }
+
+        function loadData() {
+            // Group daily data by month (use last price of each month)
+            const monthMap = new Map();
+            
+            BTC_RAW_DATA.forEach(item => {
+                const date = parseDate(item.d);
+                const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+                
+                if (!monthMap.has(monthKey) || date > monthMap.get(monthKey).date) {
+                    monthMap.set(monthKey, { date, price: item.c });
+                }
+            });
+
+            monthlyData = Array.from(monthMap.values()).sort((a, b) => a.date - b.date);
+            console.log(`Loaded ${monthlyData.length} months of data`);
+            console.log(`Date range: ${monthlyData[0].date.toDateString()} to ${monthlyData[monthlyData.length-1].date.toDateString()}`);
+        }
+
+        // ============================================
+        // ROLLING BACKTEST ENGINE
+        // ============================================
+        function runRollingBacktest(config) {
+            const startDate = new Date(config.startYear, 0, 1);
+            const endDate = new Date(config.endYear, 11, 31);
+
+            const filteredData = monthlyData.filter(d => d.date >= startDate && d.date <= endDate);
+
+            if (filteredData.length < 12) {
+                throw new Error('Insufficient data: need at least 12 months');
+            }
+
+            const paths = [];
+            const monthlyRate = config.divRate / 12;
+
+            // For each starting month, run a simulation to the end
+            for (let simStart = 0; simStart < filteredData.length - 12; simStart++) {
+                const pathData = filteredData.slice(simStart);
+                const pathDates = pathData.map(d => d.date);
+                const pathPrices = pathData.map(d => d.price);
+
+                // Start with 1 BTC for normalization
+                let btc = 1;
+                const nav0 = btc * pathPrices[0];
+                const prefAmount = nav0 * config.ampPct;
+
+                const navPath = [nav0];
+                const pctGainPath = [0];
+                let failed = false;
+                let failMonth = null;
+
+                for (let i = 1; i < pathPrices.length; i++) {
+                    if (failed) {
+                        navPath.push(0);
+                        pctGainPath.push(-100);
+                        continue;
+                    }
+
+                    const monthlyDividend = prefAmount * monthlyRate;
+                    const btcForDiv = (config.btcPct * monthlyDividend) / pathPrices[i];
+                    btc -= btcForDiv;
+
+                    if (btc <= 0) {
+                        failed = true;
+                        failMonth = i;
+                        navPath.push(0);
+                        pctGainPath.push(-100);
+                        continue;
+                    }
+
+                    const nav = btc * pathPrices[i];
+                    navPath.push(nav);
+                    pctGainPath.push((nav / nav0 - 1) * 100);
+                }
+
+                const endingGain = pctGainPath[pctGainPath.length - 1];
+                const years = (pathDates.length - 1) / 12;
+                
+                // Outperformance logic:
+                // The simulation tracks LEVERED BTC (additional exposure from PPE)
+                // If levered portion ends positive, it adds value on top of plain BTC → outperformed
+                // If levered portion ends negative, it detracted value → underperformed
+                const outperformed = !failed && endingGain > 0;
+
+                paths.push({
+                    startDate: pathDates[0],
+                    dates: pathDates,
+                    pctGainPath,
+                    navPath,
+                    defaulted: failed,
+                    endingGain,
+                    years,
+                    failMonth,
+                    outperformed
+                });
+            }
+
+            // Calculate summary
+            const numSuccess = paths.filter(p => !p.defaulted).length;
+            const numFailed = paths.filter(p => p.defaulted).length;
+            const numOutperformed = paths.filter(p => p.outperformed).length;
+
+            // Find worst drawdown
+            let worstDrawdown = null;
+            let worstDdVal = null;
+
+            for (const path of paths) {
+                const minGain = Math.min(...path.pctGainPath);
+                if (worstDdVal === null || minGain < worstDdVal) {
+                    worstDdVal = minGain;
+                    const minIndex = path.pctGainPath.indexOf(minGain);
+                    worstDrawdown = {
+                        value: minGain,
+                        date: path.dates[minIndex],
+                        finalGain: path.endingGain,
+                        startDate: path.startDate
+                    };
+                }
+            }
+
+            // Calculate amplification factor to fail
+            let ampToFail = null;
+            if (worstDrawdown && worstDrawdown.value > -100) {
+                ampToFail = 100 * (-100 / worstDrawdown.value);
+            } else if (worstDrawdown && worstDrawdown.value <= -100) {
+                ampToFail = 100;
+            }
+
+            return {
+                paths,
+                summary: {
+                    total: paths.length,
+                    success: numSuccess,
+                    failed: numFailed,
+                    successRate: (numSuccess / paths.length) * 100,
+                    failRate: (numFailed / paths.length) * 100,
+                    outperformed: numOutperformed,
+                    outperformRate: (numOutperformed / paths.length) * 100,
+                    worstDrawdown,
+                    ampToFail
+                },
+                config
+            };
+        }
+
+        // ============================================
+        // UI & CHARTS
+        // ============================================
+        function updateImpliedBCR() {
+            const amp = parseFloat(document.getElementById('amp').value) / 100;
+            const divRate = parseFloat(document.getElementById('div-rate').value) / 100;
+            const bcr = 1 / (amp * divRate);
+            document.getElementById('implied-bcr').textContent = bcr.toFixed(1) + 'x';
+        }
+
+        function generateColors(numPaths) {
+            // Vibrant color palette similar to the reference
+            const baseColors = [
+                '#00ffff', // cyan
+                '#ff00ff', // magenta
+                '#ffff00', // yellow
+                '#00ff00', // green
+                '#ff6600', // orange
+                '#ff0066', // pink
+                '#6600ff', // purple
+                '#00ff99', // mint
+                '#ff9900', // amber
+                '#0099ff', // sky blue
+                '#ff3366', // coral
+                '#66ff00', // lime
+                '#9933ff', // violet
+                '#00ffcc', // turquoise
+                '#ffcc00', // gold
+                '#ff0099', // hot pink
+                '#33ccff', // light blue
+                '#ff6633', // tangerine
+                '#99ff33', // chartreuse
+                '#cc33ff', // orchid
+            ];
+            
+            const colors = [];
+            for (let i = 0; i < numPaths; i++) {
+                // Cycle through base colors with slight hue variations
+                const baseColor = baseColors[i % baseColors.length];
+                const hueShift = Math.floor(i / baseColors.length) * 15;
+                colors.push(baseColor);
+            }
+            
+            // Shuffle colors for randomness
+            for (let i = colors.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [colors[i], colors[j]] = [colors[j], colors[i]];
+            }
+            
+            return colors;
+        }
+
+        async function updateChart() {
+            if (!backtestResult) return;
+
+            const { paths, summary } = backtestResult;
+            const colors = generateColors(paths.length);
+
+            // Find global date range
+            const allDates = paths.flatMap(p => p.dates);
+            const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
+            const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
+
+            // Create layout
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Space Grotesk', color: '#a0a0b0' },
+                margin: { t: 20, r: 30, b: 50, l: 80 },
+                xaxis: { 
+                    title: 'Date',
+                    gridcolor: '#2a2a3a',
+                    tickformat: '%Y',
+                    range: [minDate, maxDate]
+                },
+                yaxis: { 
+                    title: 'Log-scaled % Gain from Starting NAV',
+                    gridcolor: '#2a2a3a',
+                    type: 'log',
+                    tickvals: [1, 100, 1000, 10000, 100000],
+                    ticktext: ['Failed', '0%', '1,000%', '10,000%', '100,000%'],
+                    range: [0.7, 5.2]
+                },
+                showlegend: false,
+                hovermode: 'closest'
+            };
+
+            // Create ALL traces with FULL data upfront
+            const allTraces = paths.map((path, idx) => {
+                const yValues = path.pctGainPath.map(v => Math.max(0.1, v + 100));
+                return {
+                    x: path.dates,
+                    y: yValues,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: `Start: ${path.startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}`,
+                    line: { 
+                        color: path.defaulted ? '#e74c3c' : colors[idx],
+                        width: path.defaulted ? 2 : 1
+                    },
+                    hovertemplate: '%{text:.1f}%<extra>%{fullData.name}</extra>',
+                    text: path.pctGainPath
+                };
+            });
+
+            // Add reference lines
+            allTraces.push({
+                x: [minDate, maxDate],
+                y: [1, 1],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Bankruptcy',
+                line: { color: '#e74c3c', width: 3, dash: 'dash' }
+            });
+            allTraces.push({
+                x: [minDate, maxDate],
+                y: [100, 100],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Break Even',
+                line: { color: '#888', width: 1, dash: 'dot' },
+                showlegend: false
+            });
+
+            // Draw full chart instantly (hidden by curtain)
+            const chartEl = document.getElementById('paths-chart');
+            chartEl.style.clipPath = 'inset(0 100% 0 0)'; // Hide everything initially
+            
+            await Plotly.newPlot('paths-chart', allTraces, layout, { responsive: true });
+
+            // Animate the curtain reveal from left to right over 5 seconds
+            const animationDuration = 5000;
+            const startTime = performance.now();
+
+            function animateCurtain(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(1, elapsed / animationDuration);
+                
+                // Ease out cubic for smooth deceleration
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const revealPercent = 100 - (100 * (1 - eased));
+                
+                chartEl.style.clipPath = `inset(0 ${100 - revealPercent}% 0 0)`;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateCurtain);
+                } else {
+                    chartEl.style.clipPath = 'none'; // Remove clip when done
+                }
+            }
+
+            requestAnimationFrame(animateCurtain);
+        }
+
+        function updateChartInstant() {
+            if (!backtestResult) return;
+
+            const { paths, summary } = backtestResult;
+            const colors = generateColors(paths.length);
+
+            const traces = paths.map((path, idx) => {
+                const yValues = path.pctGainPath.map(v => Math.max(0.1, v + 100));
+                return {
+                    x: path.dates,
+                    y: yValues,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: `Start: ${path.startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}`,
+                    line: { 
+                        color: path.defaulted ? '#e74c3c' : colors[idx],
+                        width: path.defaulted ? 2 : 1
+                    },
+                    hovertemplate: '%{text:.1f}%<extra>%{fullData.name}</extra>',
+                    text: path.pctGainPath
+                };
+            });
+
+            // Add failure line
+            traces.push({
+                x: [paths[0].dates[0], paths[0].dates[paths[0].dates.length - 1]],
+                y: [1, 1],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Bankruptcy',
+                line: { color: '#e74c3c', width: 3, dash: 'dash' }
+            });
+
+            // Add break-even line (100 on shifted scale = 0% gain)
+            traces.push({
+                x: [paths[0].dates[0], paths[0].dates[paths[0].dates.length - 1]],
+                y: [100, 100],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Break Even',
+                line: { color: '#888', width: 1, dash: 'dot' },
+                showlegend: false
+            });
+
+            Plotly.newPlot('paths-chart', traces, {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Space Grotesk', color: '#a0a0b0' },
+                margin: { t: 20, r: 30, b: 50, l: 80 },
+                xaxis: { 
+                    title: 'Date',
+                    gridcolor: '#2a2a3a',
+                    tickformat: '%Y'
+                },
+                yaxis: { 
+                    title: 'Log-scaled % Gain from Starting NAV',
+                    gridcolor: '#2a2a3a',
+                    type: 'log',
+                    tickvals: [1, 100, 1000, 10000, 100000],
+                    ticktext: ['Failed', '0%', '1,000%', '10,000%', '100,000%'],
+                    range: [0.7, 5.2]
+                },
+                showlegend: false,
+                hovermode: 'closest'
+            }, { responsive: true });
+        }
+
+        function updateSummary() {
+            if (!backtestResult) return;
+
+            const { summary, config } = backtestResult;
+            const bcr = 1 / (config.ampPct * config.divRate);
+
+            // Main highlight
+            document.getElementById('summary-highlight').innerHTML = `
+                Out of <span class="num">${summary.total}</span> scenarios,
+                <span class="success">${summary.success}</span> (${summary.successRate.toFixed(1)}%) ended without bankruptcy,
+                while <span class="fail">${summary.failed}</span> (${summary.failRate.toFixed(1)}%) ended in bankruptcy.
+                <br><br>
+                <span style="color: #2ecc71"><b>${summary.outperformed}</b></span> paths (${summary.outperformRate.toFixed(1)}%) <b>outperformed plain BTC</b> over their respective periods.
+            `;
+
+            // Stats grid
+            document.getElementById('summary-grid').style.display = 'grid';
+            document.getElementById('stat-total').textContent = summary.total;
+            document.getElementById('stat-success').textContent = summary.successRate.toFixed(1) + '%';
+            document.getElementById('stat-outperform').textContent = summary.outperformRate.toFixed(1) + '%';
+            document.getElementById('stat-amp').textContent = (config.ampPct * 100).toFixed(1) + '%';
+            document.getElementById('stat-bcr').textContent = bcr.toFixed(1) + 'x';
+            document.getElementById('stat-div').textContent = (config.divRate * 100).toFixed(1) + '%';
+            document.getElementById('stat-period').textContent = `${config.startYear} - ${config.endYear}`;
+
+            // Worst analysis
+            if (summary.worstDrawdown) {
+                document.getElementById('worst-analysis').style.display = 'block';
+                document.getElementById('stat-amp-fail').textContent = summary.ampToFail ? summary.ampToFail.toFixed(1) + '%' : 'N/A';
+                document.getElementById('stat-worst-dd').textContent = summary.worstDrawdown.value.toFixed(1) + '%';
+                document.getElementById('stat-dd-date').textContent = summary.worstDrawdown.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+                document.getElementById('stat-final-gain').textContent = summary.worstDrawdown.finalGain.toFixed(1) + '%';
+            }
+
+            // Context line
+            const btcPctText = config.btcPct === 1 ? '100%' : (config.btcPct * 100).toFixed(0) + '%';
+            document.getElementById('context-line').innerHTML = `
+                At <b>${(config.ampPct * 100).toFixed(1)}% amplification</b> (${bcr.toFixed(1)}x BCR, ${(config.divRate * 100).toFixed(0)}% dividend rate),
+                with <b>${btcPctText}</b> of dividends paid through BTC sales,
+                the rolling backtest shows <span style="color: ${summary.failRate > 0 ? '#e74c3c' : '#2ecc71'}"><b>${summary.failRate.toFixed(1)}%</b></span> historical failure rate
+                across <b>${summary.total}</b> scenarios from <b>${config.startYear}</b> to <b>${config.endYear}</b>.
+                ${summary.worstDrawdown ? `Worst drawdown was <b>${summary.worstDrawdown.value.toFixed(1)}%</b>, requiring <b>${summary.ampToFail?.toFixed(1) || 'N/A'}%</b> amplification to trigger failure.` : ''}
+            `;
+        }
+
+        async function runBacktest() {
+            const btn = document.getElementById('run-btn');
+            const loading = document.getElementById('loading');
+            const progressFill = document.getElementById('progress-fill');
+
+            btn.disabled = true;
+            loading.classList.add('active');
+            progressFill.style.width = '0%';
+
+            await new Promise(r => setTimeout(r, 50));
+
+            try {
+                const config = {
+                    ampPct: parseFloat(document.getElementById('amp').value) / 100,
+                    divRate: parseFloat(document.getElementById('div-rate').value) / 100,
+                    btcPct: parseFloat(document.getElementById('btc-pct').value) / 100,
+                    startYear: parseInt(document.getElementById('start-year').value),
+                    endYear: parseInt(document.getElementById('end-year').value)
+                };
+
+                progressFill.style.width = '30%';
+                await new Promise(r => setTimeout(r, 50));
+
+                backtestResult = runRollingBacktest(config);
+
+                progressFill.style.width = '70%';
+                await new Promise(r => setTimeout(r, 50));
+
+                updateChart();
+                updateSummary();
+
+                progressFill.style.width = '100%';
+                await new Promise(r => setTimeout(r, 200));
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                console.error(error);
+            }
+
+            loading.classList.remove('active');
+            btn.disabled = false;
+        }
+
+        function exportData() {
+            if (!backtestResult) {
+                alert('Run a backtest first!');
+                return;
+            }
+
+            const { summary, config, paths } = backtestResult;
+            const bcr = 1 / (config.ampPct * config.divRate);
+
+            let csv = 'BTC Treasury Rolling Backtest Export\n';
+            csv += '=====================================\n\n';
+            
+            csv += 'CONFIGURATION\n';
+            csv += `Amplification,${(config.ampPct * 100).toFixed(1)}%\n`;
+            csv += `Implied BCR,${bcr.toFixed(1)}x\n`;
+            csv += `Dividend Rate,${(config.divRate * 100).toFixed(1)}%\n`;
+            csv += `BTC Sale %,${(config.btcPct * 100).toFixed(0)}%\n`;
+            csv += `Period,${config.startYear} - ${config.endYear}\n\n`;
+
+            csv += 'SUMMARY\n';
+            csv += `Total Scenarios,${summary.total}\n`;
+            csv += `Successes,${summary.success}\n`;
+            csv += `Failures,${summary.failed}\n`;
+            csv += `Success Rate,${summary.successRate.toFixed(2)}%\n`;
+            csv += `Failure Rate,${summary.failRate.toFixed(2)}%\n`;
+            if (summary.worstDrawdown) {
+                csv += `Worst Drawdown,${summary.worstDrawdown.value.toFixed(2)}%\n`;
+                csv += `Amplification to Fail,${summary.ampToFail?.toFixed(2) || 'N/A'}%\n`;
+            }
+            csv += '\n';
+
+            csv += 'PATH RESULTS\n';
+            csv += 'Start Date,End Gain %,Failed,Years\n';
+            paths.forEach(path => {
+                csv += `${path.startDate.toISOString().split('T')[0]},${path.endingGain.toFixed(2)},${path.defaulted},${path.years.toFixed(1)}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rolling-backtest-${(config.ampPct*100).toFixed(0)}pct-amp.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        const sliders = [
+            { id: 'amp', format: v => parseFloat(v).toFixed(1) + '%' },
+            { id: 'div-rate', format: v => parseFloat(v).toFixed(1) + '%' },
+            { id: 'btc-pct', format: v => v + '%' }
+        ];
+
+        sliders.forEach(slider => {
+            const el = document.getElementById(slider.id);
+            const valEl = document.getElementById('val-' + slider.id);
+            el.addEventListener('input', () => {
+                valEl.textContent = slider.format(el.value);
+                updateImpliedBCR();
+            });
+        });
+
+        // Initialize
+        loadData();
+        updateImpliedBCR();
+
+        // Empty chart
+        Plotly.newPlot('paths-chart', [], {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { family: 'Space Grotesk', color: '#a0a0b0' },
+            margin: { t: 20, r: 30, b: 50, l: 70 },
+            xaxis: { gridcolor: '#2a2a3a' },
+            yaxis: { gridcolor: '#2a2a3a' },
+            annotations: [{
+                text: 'Run backtest to see results',
+                xref: 'paper', yref: 'paper',
+                x: 0.5, y: 0.5,
+                showarrow: false,
+                font: { size: 16, color: '#606070' }
+            }]
+        }, { responsive: true });
+    </script>
+</body>
+</html>
+

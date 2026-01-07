@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC 4-Year Rolling CAGR</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="btc_data.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --border-color: #2a2a3a;
+            --text-primary: #ffffff;
+            --text-light: #e0e0e0;
+            --text-muted: #888899;
+            --accent-orange: #ff9f43;
+            --accent-orange-dim: rgba(255, 159, 67, 0.3);
+            --accent-blue: #4a9eff;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --accent-purple: #a855f7;
+            --accent-cyan: #00d4aa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .header-links a:hover {
+            color: var(--accent-orange);
+            border-color: var(--accent-orange);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .control-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--accent-orange);
+            border-radius: 2px;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--border-color);
+        }
+
+        .control-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            margin-bottom: 18px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .control-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-orange);
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-orange-dim);
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        select:hover, select:focus {
+            border-color: var(--accent-orange);
+        }
+
+        .charts-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 450px;
+        }
+
+        .percentile-chart-container {
+            height: 350px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .stat-value.orange { color: var(--accent-orange); }
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.red { color: var(--accent-red); }
+        .stat-value.cyan { color: var(--accent-cyan); }
+        .stat-value.blue { color: var(--accent-blue); }
+        .stat-value.purple { color: var(--accent-purple); }
+
+        .context-text {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+            border: 1px solid var(--accent-orange-dim);
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .context-text strong {
+            color: var(--accent-orange);
+        }
+
+        .percentile-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.85rem;
+        }
+
+        .percentile-table th,
+        .percentile-table td {
+            padding: 10px 12px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .percentile-table th {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+        }
+
+        .percentile-table td {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-light);
+        }
+
+        .percentile-table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>₿ Bitcoin Rolling CAGR Analysis</h1>
+        <div class="header-links">
+            <a href="index.html">← Home</a>
+            <a href="monte-carlo.html">🎲 Monte Carlo</a>
+            <a href="rolling-backtest.html">📈 Backtest</a>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="control-panel">
+            <div class="panel-title">CAGR Settings</div>
+            
+            <div class="control-section">
+                <div class="section-label">Rolling Window</div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>CAGR Window (Years)</span>
+                        <span class="control-value" id="window-value">4</span>
+                    </div>
+                    <input type="range" id="window-years" min="1" max="10" value="4" step="1">
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-label">Date Range</div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Start Year</span>
+                        <span class="control-value" id="start-year-value">2014</span>
+                    </div>
+                    <select id="start-year"></select>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>End Year</span>
+                        <span class="control-value" id="end-year-value">2025</span>
+                    </div>
+                    <select id="end-year"></select>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-label">Data Summary</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+                    <div id="data-summary">Loading data...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-area">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Current CAGR</div>
+                    <div class="stat-value cyan" id="stat-current">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Median CAGR</div>
+                    <div class="stat-value orange" id="stat-median">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Min CAGR</div>
+                    <div class="stat-value red" id="stat-min">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Max CAGR</div>
+                    <div class="stat-value green" id="stat-max">--</div>
+                </div>
+            </div>
+
+            <!-- Main Price + CAGR Chart -->
+            <div class="chart-card">
+                <div class="chart-title">📈 Bitcoin Price & Rolling CAGR</div>
+                <div class="chart-container" id="price-cagr-chart"></div>
+                <div class="context-text" id="chart-context"></div>
+            </div>
+
+            <!-- Percentile Distribution Chart -->
+            <div class="chart-card">
+                <div class="chart-title">📊 CAGR Percentile Distribution</div>
+                <div class="chart-container percentile-chart-container" id="percentile-chart"></div>
+                
+                <table class="percentile-table">
+                    <thead>
+                        <tr>
+                            <th>1st</th>
+                            <th>5th</th>
+                            <th>10th</th>
+                            <th>25th</th>
+                            <th>50th</th>
+                            <th>75th</th>
+                            <th>90th</th>
+                            <th>95th</th>
+                            <th>99th</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="percentile-row"></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== BTC PRICE DATA ====================
+        // BTC_RAW_DATA loaded from btc_data.js
+        
+        // ==================== UTILITY FUNCTIONS ====================
+        function parseDate(dateStr) {
+            // Handle "DD-Mon-YY" format like "17-Sep-14"
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                const day = parseInt(parts[0]);
+                const monthStr = parts[1];
+                let year = parseInt(parts[2]);
+                
+                // Convert 2-digit year to 4-digit
+                year = year < 50 ? 2000 + year : 1900 + year;
+                
+                const months = {
+                    'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                    'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                };
+                
+                const month = months[monthStr];
+                if (month !== undefined) {
+                    return new Date(year, month, day);
+                }
+            }
+            return new Date(dateStr);
+        }
+
+        function formatPercent(value) {
+            if (value === null || value === undefined || isNaN(value)) return '--';
+            const sign = value >= 0 ? '+' : '';
+            return sign + value.toFixed(1) + '%';
+        }
+
+        function formatCurrency(value) {
+            if (value >= 1e6) return '$' + (value / 1e6).toFixed(1) + 'M';
+            if (value >= 1e3) return '$' + (value / 1e3).toFixed(1) + 'K';
+            return '$' + value.toFixed(0);
+        }
+
+        function percentile(arr, p) {
+            const sorted = [...arr].sort((a, b) => a - b);
+            const idx = (p / 100) * (sorted.length - 1);
+            const lower = Math.floor(idx);
+            const upper = Math.ceil(idx);
+            if (lower === upper) return sorted[lower];
+            return sorted[lower] + (sorted[upper] - sorted[lower]) * (idx - lower);
+        }
+
+        // ==================== CAGR CALCULATION ====================
+        function calculateRollingCAGR(priceData, windowYears) {
+            const windowDays = windowYears * 365;
+            const results = [];
+            
+            // Get the earliest date in the dataset
+            const earliestDate = priceData[0].date;
+            
+            for (let i = 0; i < priceData.length; i++) {
+                const endDate = priceData[i].date;
+                const endPrice = priceData[i].price;
+                
+                // Calculate target date (windowYears ago)
+                const targetDate = new Date(endDate);
+                targetDate.setDate(targetDate.getDate() - windowDays);
+                
+                // Only calculate CAGR if we have enough historical data
+                // Target date must be on or after the earliest date in our dataset
+                if (targetDate < earliestDate) {
+                    // Not enough history - skip this point
+                    results.push({
+                        date: endDate,
+                        price: endPrice,
+                        cagr: null
+                    });
+                    continue;
+                }
+                
+                // Find the price closest to (but not before) the target date
+                let startPrice = null;
+                let startDate = null;
+                for (let j = 0; j < i; j++) {
+                    if (priceData[j].date >= targetDate) {
+                        startPrice = priceData[j].price;
+                        startDate = priceData[j].date;
+                        break;
+                    }
+                }
+                
+                if (startPrice && startPrice > 0 && endPrice > 0 && startDate) {
+                    // Calculate actual years between the two dates
+                    const actualDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+                    const actualYears = actualDays / 365;
+                    
+                    // CAGR = (endPrice / startPrice)^(1/years) - 1
+                    const cagr = Math.pow(endPrice / startPrice, 1 / actualYears) - 1;
+                    results.push({
+                        date: endDate,
+                        price: endPrice,
+                        cagr: cagr * 100 // Convert to percentage
+                    });
+                } else {
+                    results.push({
+                        date: endDate,
+                        price: endPrice,
+                        cagr: null
+                    });
+                }
+            }
+            
+            return results;
+        }
+
+        // ==================== CHART UPDATES ====================
+        function updatePriceCAGRChart(data, windowYears) {
+            const dates = data.map(d => d.date);
+            const prices = data.map(d => d.price);
+            const cagrs = data.map(d => d.cagr);
+            
+            const traces = [
+                {
+                    x: dates,
+                    y: prices,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'BTC Price',
+                    yaxis: 'y',
+                    line: { color: '#ff9f43', width: 2 }
+                },
+                {
+                    x: dates,
+                    y: cagrs,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: `${windowYears}-Year CAGR`,
+                    yaxis: 'y2',
+                    line: { color: '#00d4aa', width: 2 },
+                    connectgaps: false
+                },
+                // Zero line for CAGR
+                {
+                    x: [dates[0], dates[dates.length - 1]],
+                    y: [0, 0],
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: '0% CAGR',
+                    yaxis: 'y2',
+                    line: { color: '#888899', width: 1, dash: 'dash' },
+                    showlegend: false
+                }
+            ];
+
+            const layout = {
+                paper_bgcolor: '#12121a',
+                plot_bgcolor: '#12121a',
+                font: { family: 'Space Grotesk, sans-serif', color: '#e0e0e0' },
+                margin: { t: 30, r: 80, b: 50, l: 80 },
+                showlegend: true,
+                legend: {
+                    x: 0.5,
+                    y: 1.12,
+                    xanchor: 'center',
+                    orientation: 'h',
+                    bgcolor: 'transparent'
+                },
+                xaxis: {
+                    title: 'Date',
+                    gridcolor: '#2a2a3a',
+                    linecolor: '#2a2a3a',
+                    tickformat: '%Y'
+                },
+                yaxis: {
+                    title: 'BTC Price (USD)',
+                    type: 'log',
+                    gridcolor: '#2a2a3a',
+                    linecolor: '#2a2a3a',
+                    tickformat: '$,.0f',
+                    side: 'left',
+                    titlefont: { color: '#ff9f43' },
+                    tickfont: { color: '#ff9f43' }
+                },
+                yaxis2: {
+                    title: `${windowYears}-Year CAGR (%)`,
+                    overlaying: 'y',
+                    side: 'right',
+                    gridcolor: 'transparent',
+                    linecolor: '#2a2a3a',
+                    ticksuffix: '%',
+                    titlefont: { color: '#00d4aa' },
+                    tickfont: { color: '#00d4aa' },
+                    zeroline: true,
+                    zerolinecolor: '#888899',
+                    zerolinewidth: 1
+                },
+                hovermode: 'x unified'
+            };
+
+            Plotly.newPlot('price-cagr-chart', traces, layout, { responsive: true, displayModeBar: false });
+        }
+
+        function updatePercentileChart(cagrValues, windowYears) {
+            // Calculate percentiles 1-99
+            const percentiles = [];
+            for (let p = 1; p <= 99; p++) {
+                const val = percentile(cagrValues, p);
+                percentiles.push({ p, val });
+            }
+
+            const trace = {
+                x: percentiles.map(d => d.p),
+                y: percentiles.map(d => d.val),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'CAGR',
+                line: { color: '#ff9f43', width: 3 },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(255, 159, 67, 0.15)'
+            };
+
+            // Zero line
+            const zeroLine = {
+                x: [1, 99],
+                y: [0, 0],
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#e74c3c', width: 2, dash: 'dash' },
+                showlegend: false
+            };
+
+            const layout = {
+                paper_bgcolor: '#12121a',
+                plot_bgcolor: '#12121a',
+                font: { family: 'Space Grotesk, sans-serif', color: '#e0e0e0' },
+                margin: { t: 20, r: 40, b: 50, l: 60 },
+                showlegend: false,
+                xaxis: {
+                    title: 'Percentile (1 = Worst, 99 = Best)',
+                    gridcolor: '#2a2a3a',
+                    linecolor: '#2a2a3a',
+                    tickvals: [1, 10, 25, 50, 75, 90, 99],
+                    ticktext: ['1%', '10%', '25%', '50%', '75%', '90%', '99%'],
+                    range: [0, 100]
+                },
+                yaxis: {
+                    title: `${windowYears}-Year CAGR (%)`,
+                    gridcolor: '#2a2a3a',
+                    linecolor: '#2a2a3a',
+                    ticksuffix: '%',
+                    zeroline: true,
+                    zerolinecolor: '#e74c3c',
+                    zerolinewidth: 1
+                }
+            };
+
+            Plotly.newPlot('percentile-chart', [trace, zeroLine], layout, { responsive: true, displayModeBar: false });
+
+            // Update percentile table
+            const keyPercentiles = [1, 5, 10, 25, 50, 75, 90, 95, 99];
+            const row = document.getElementById('percentile-row');
+            row.innerHTML = keyPercentiles.map(p => {
+                const val = percentile(cagrValues, p);
+                const color = val >= 0 ? '#2ecc71' : '#e74c3c';
+                return `<td style="color: ${color}">${formatPercent(val)}</td>`;
+            }).join('');
+        }
+
+        function updateStats(cagrValues) {
+            const validCagrs = cagrValues.filter(v => v !== null && !isNaN(v));
+            if (validCagrs.length === 0) return;
+
+            const current = validCagrs[validCagrs.length - 1];
+            const median = percentile(validCagrs, 50);
+            const min = Math.min(...validCagrs);
+            const max = Math.max(...validCagrs);
+
+            document.getElementById('stat-current').textContent = formatPercent(current);
+            document.getElementById('stat-median').textContent = formatPercent(median);
+            document.getElementById('stat-min').textContent = formatPercent(min);
+            document.getElementById('stat-max').textContent = formatPercent(max);
+        }
+
+        function updateContext(cagrValues, windowYears, startYear, endYear) {
+            const validCagrs = cagrValues.filter(v => v !== null && !isNaN(v));
+            if (validCagrs.length === 0) return;
+
+            const current = validCagrs[validCagrs.length - 1];
+            const median = percentile(validCagrs, 50);
+            const pctBelowZero = (validCagrs.filter(v => v < 0).length / validCagrs.length * 100).toFixed(1);
+            const currentPctl = validCagrs.filter(v => v <= current).length / validCagrs.length * 100;
+
+            document.getElementById('chart-context').innerHTML = `
+                Over the period <strong>${startYear}</strong> to <strong>${endYear}</strong>, 
+                Bitcoin's <strong>${windowYears}-year rolling CAGR</strong> has ranged from 
+                <strong style="color: #e74c3c">${formatPercent(Math.min(...validCagrs))}</strong> to 
+                <strong style="color: #2ecc71">${formatPercent(Math.max(...validCagrs))}</strong>. 
+                The current ${windowYears}-year CAGR is <strong style="color: #00d4aa">${formatPercent(current)}</strong>, 
+                which is at the <strong>${currentPctl.toFixed(0)}th percentile</strong> of historical values.
+                Only <strong>${pctBelowZero}%</strong> of ${windowYears}-year holding periods resulted in negative returns.
+            `;
+        }
+
+        // ==================== MAIN LOGIC ====================
+        let priceData = [];
+
+        function initializeData() {
+            // Parse raw data
+            priceData = BTC_RAW_DATA.map(d => ({
+                date: parseDate(d.d),
+                price: d.c
+            })).filter(d => !isNaN(d.date.getTime()) && d.price > 0);
+
+            // Sort by date
+            priceData.sort((a, b) => a.date - b.date);
+
+            // Get year range
+            const years = [...new Set(priceData.map(d => d.date.getFullYear()))].sort();
+            
+            // Populate year dropdowns
+            const startSelect = document.getElementById('start-year');
+            const endSelect = document.getElementById('end-year');
+            
+            startSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+            endSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+            
+            startSelect.value = years[0];
+            endSelect.value = years[years.length - 1];
+            
+            document.getElementById('start-year-value').textContent = years[0];
+            document.getElementById('end-year-value').textContent = years[years.length - 1];
+
+            // Update data summary
+            document.getElementById('data-summary').innerHTML = `
+                <div><strong>${priceData.length.toLocaleString()}</strong> daily prices</div>
+                <div>${years[0]} to ${years[years.length - 1]}</div>
+                <div>$${priceData[0].price.toFixed(2)} → $${priceData[priceData.length - 1].price.toLocaleString()}</div>
+            `;
+
+            runAnalysis();
+        }
+
+        function runAnalysis() {
+            const windowYears = parseInt(document.getElementById('window-years').value);
+            const startYear = parseInt(document.getElementById('start-year').value);
+            const endYear = parseInt(document.getElementById('end-year').value);
+
+            // Filter data by year range
+            const filteredData = priceData.filter(d => {
+                const year = d.date.getFullYear();
+                return year >= startYear && year <= endYear;
+            });
+
+            if (filteredData.length === 0) {
+                console.error('No data in selected range');
+                return;
+            }
+
+            // Calculate rolling CAGR
+            const cagrData = calculateRollingCAGR(filteredData, windowYears);
+            
+            // Get valid CAGR values for stats
+            const validCagrs = cagrData.map(d => d.cagr).filter(v => v !== null && !isNaN(v));
+
+            // Update charts
+            updatePriceCAGRChart(cagrData, windowYears);
+            
+            if (validCagrs.length > 0) {
+                updatePercentileChart(validCagrs, windowYears);
+                updateStats(validCagrs);
+                updateContext(validCagrs, windowYears, startYear, endYear);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('window-years').addEventListener('input', function() {
+            document.getElementById('window-value').textContent = this.value;
+            runAnalysis();
+        });
+
+        document.getElementById('start-year').addEventListener('change', function() {
+            document.getElementById('start-year-value').textContent = this.value;
+            runAnalysis();
+        });
+
+        document.getElementById('end-year').addEventListener('change', function() {
+            document.getElementById('end-year-value').textContent = this.value;
+            runAnalysis();
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', initializeData);
+    </script>
+</body>
+</html>
+
