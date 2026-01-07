@@ -2154,22 +2154,35 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
                 });
             }
 
+            // Configure Y-axis based on metric
+            const yAxisConfig = {
+                title: yLabel,
+                gridcolor: '#2a2a3a',
+                type: 'log'
+            };
+            
+            if (metric === 'terminal-nav') {
+                // For NAV, show dollar values with proper formatting
+                yAxisConfig.tickprefix = '$';
+                yAxisConfig.tickformat = '.2s';
+                yAxisConfig.hoverformat = '$,.0f';
+            } else {
+                // For BCR metrics, show multiplier values
+                yAxisConfig.tickformat = '.1f';
+                yAxisConfig.ticksuffix = 'x';
+            }
+
             Plotly.newPlot('percentile-chart', traces, {
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { family: 'Space Grotesk', color: '#a0a0b0' },
-                margin: { t: 20, r: 30, b: 50, l: 80 },
+                margin: { t: 20, r: 30, b: 50, l: 100 },
                 xaxis: { 
                     title: 'Percentile (%)', 
                     gridcolor: '#2a2a3a',
                     tickvals: tickVals,
                     ticktext: tickLabels
                 },
-                yaxis: { 
-                    title: yLabel, 
-                    gridcolor: '#2a2a3a', 
-                    type: 'log', 
-                    tickformat: metric === 'terminal-nav' ? '$.2s' : '.1f' 
-                },
+                yaxis: yAxisConfig,
                 showlegend: true,
                 legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(0,0,0,0.5)' },
                 hovermode: 'x unified'
