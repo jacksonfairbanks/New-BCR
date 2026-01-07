@@ -1184,7 +1184,7 @@
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <div class="chart-title">Terminal BCR Percentile Curves</div>
+                        <div class="chart-title" id="percentile-chart-title">Terminal BCR Percentile Curves</div>
                         <div class="chart-controls">
                             <select id="metric-select" onchange="updatePercentileChart(); updatePercentileTable();">
                                 <option value="terminal-bcr">Terminal BCR</option>
@@ -2089,17 +2089,33 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
             const r = simulationResults;
 
             let lnData, jData, bData, yLabel;
-            switch (metric) {
-                case 'terminal-bcr':
-                    lnData = r.lognorm.terminalBCR; jData = r.jump.terminalBCR; bData = r.bootstrap.terminalBCR;
-                    yLabel = 'Terminal BCR (x)'; break;
-                case 'min-bcr':
-                    lnData = r.lognorm.minBCR; jData = r.jump.minBCR; bData = r.bootstrap.minBCR;
-                    yLabel = 'Minimum BCR (x)'; break;
-                case 'terminal-nav':
-                    lnData = r.lognorm.terminalNAV; jData = r.jump.terminalNAV; bData = r.bootstrap.terminalNAV;
-                    yLabel = 'Terminal NAV ($)'; break;
+            if (metric === 'terminal-bcr') {
+                lnData = r.lognorm.terminalBCR; 
+                jData = r.jump.terminalBCR; 
+                bData = r.bootstrap.terminalBCR;
+                yLabel = 'Terminal BCR (x)';
+            } else if (metric === 'min-bcr') {
+                lnData = r.lognorm.minBCR; 
+                jData = r.jump.minBCR; 
+                bData = r.bootstrap.minBCR;
+                yLabel = 'Minimum BCR (x)';
+            } else if (metric === 'terminal-nav') {
+                lnData = r.lognorm.terminalNAV; 
+                jData = r.jump.terminalNAV; 
+                bData = r.bootstrap.terminalNAV;
+                yLabel = 'Terminal NAV ($)';
             }
+            
+            // Purge chart to force complete redraw
+            Plotly.purge('percentile-chart');
+            
+            // Update chart title based on metric
+            const chartTitles = {
+                'terminal-bcr': 'Terminal BCR Percentile Curves',
+                'min-bcr': 'Minimum BCR Percentile Curves',
+                'terminal-nav': 'Terminal NAV Percentile Curves'
+            };
+            document.getElementById('percentile-chart-title').textContent = chartTitles[metric];
 
             // Use all 99 percentiles for smooth curves (like your Python code)
             const pcts = Array.from({ length: 99 }, (_, i) => i + 1);  // 1 to 99
@@ -2107,6 +2123,9 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
             // Key percentiles for x-axis ticks
             const tickVals = [1, 5, 10, 25, 50, 75, 90, 95, 99];
             const tickLabels = tickVals.map(p => p + '%');
+            
+            // Determine if we're showing NAV (dollars) or BCR (multiplier)
+            const isNAV = (metric === 'terminal-nav');
 
             const traces = [
                 { 
@@ -2132,7 +2151,8 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
                 }
             ].map(t => ({ ...t, type: 'scatter', mode: 'lines' }));
 
-            if (metric === 'terminal-nav') {
+            // Add failure threshold line
+            if (isNAV) {
                 // For Terminal NAV, failure line is at annual dividend (BCR = 1)
                 const navInitial = parseFloat(document.getElementById('treasury-scale').value) * 1e9;
                 const amplification = parseFloat(document.getElementById('amplification').value) / 100;
@@ -2142,7 +2162,8 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
                 
                 traces.push({
                     x: [1, 99], y: [annualDividend, annualDividend],
-                    name: 'Failure (1x BCR)', type: 'scatter', mode: 'lines',
+                    name: 'Failure Threshold ($' + (annualDividend / 1e9).toFixed(1) + 'B)', 
+                    type: 'scatter', mode: 'lines',
                     line: { color: '#ff4757', width: 2, dash: 'dash' }
                 });
             } else {
@@ -2154,26 +2175,10 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
                 });
             }
 
-            // Configure Y-axis based on metric
-            const yAxisConfig = {
-                title: yLabel,
-                gridcolor: '#2a2a3a',
-                type: 'log'
-            };
-            
-            if (metric === 'terminal-nav') {
-                // For NAV, show dollar values with proper formatting
-                yAxisConfig.tickprefix = '$';
-                yAxisConfig.tickformat = '.2s';
-                yAxisConfig.hoverformat = '$,.0f';
-            } else {
-                // For BCR metrics, show multiplier values
-                yAxisConfig.tickformat = '.1f';
-                yAxisConfig.ticksuffix = 'x';
-            }
-
-            Plotly.newPlot('percentile-chart', traces, {
-                paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            // Build layout with proper Y-axis formatting based on metric
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)', 
+                plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { family: 'Space Grotesk', color: '#a0a0b0' },
                 margin: { t: 20, r: 30, b: 50, l: 100 },
                 xaxis: { 
@@ -2182,11 +2187,26 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
                     tickvals: tickVals,
                     ticktext: tickLabels
                 },
-                yaxis: yAxisConfig,
+                yaxis: isNAV ? {
+                    title: 'Terminal NAV ($)',
+                    gridcolor: '#2a2a3a',
+                    type: 'log',
+                    tickprefix: '$',
+                    tickformat: '.2s',
+                    hoverformat: '$,.0f'
+                } : {
+                    title: yLabel,
+                    gridcolor: '#2a2a3a',
+                    type: 'log',
+                    tickformat: '.1f',
+                    ticksuffix: 'x'
+                },
                 showlegend: true,
                 legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(0,0,0,0.5)' },
                 hovermode: 'x unified'
-            }, { responsive: true });
+            };
+
+            Plotly.newPlot('percentile-chart', traces, layout, { responsive: true });
         }
 
         function updatePercentileTable() {
