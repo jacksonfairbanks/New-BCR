@@ -2132,7 +2132,21 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
                 }
             ].map(t => ({ ...t, type: 'scatter', mode: 'lines' }));
 
-            if (metric !== 'terminal-nav') {
+            if (metric === 'terminal-nav') {
+                // For Terminal NAV, failure line is at annual dividend (BCR = 1)
+                const navInitial = parseFloat(document.getElementById('treasury-scale').value) * 1e9;
+                const amplification = parseFloat(document.getElementById('amplification').value) / 100;
+                const divRate = parseFloat(document.getElementById('div-rate').value) / 100;
+                const prefNotional = navInitial * amplification;
+                const annualDividend = prefNotional * divRate;
+                
+                traces.push({
+                    x: [1, 99], y: [annualDividend, annualDividend],
+                    name: 'Failure (1x BCR)', type: 'scatter', mode: 'lines',
+                    line: { color: '#ff4757', width: 2, dash: 'dash' }
+                });
+            } else {
+                // For BCR metrics, failure line is at 1.0x
                 traces.push({
                     x: [1, 99], y: [1, 1],
                     name: '1.0x Threshold', type: 'scatter', mode: 'lines',
