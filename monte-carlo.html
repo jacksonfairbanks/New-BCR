@@ -2143,7 +2143,7 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
                 font: { family: 'Space Grotesk', color: '#a0a0b0' },
                 margin: { t: 20, r: 30, b: 50, l: 80 },
                 xaxis: { title: 'Percentile (%)', gridcolor: '#2a2a3a', tickvals: tickVals, ticktext: tickVals.map(p => p + '%') },
-                yaxis: { title: yLabel, gridcolor: '#2a2a3a', type: 'log' },
+                yaxis: { title: yLabel, gridcolor: '#2a2a3a', type: 'log', dtick: 1 },
                 showlegend: true,
                 legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(0,0,0,0.5)' },
                 hovermode: 'x unified'
