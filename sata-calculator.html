@@ -131,20 +131,23 @@
             border-radius: 2px;
         }
 
-        .live-indicator {
-            font-size: 0.7rem;
-            color: #2ecc71;
-            margin-left: auto;
-            padding: 4px 8px;
-            background: rgba(46, 204, 113, 0.1);
-            border-radius: 4px;
-            cursor: help;
-            white-space: pre-line;
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            background: #888;
         }
 
-        .live-indicator.offline {
-            color: #e74c3c;
-            background: rgba(231, 76, 60, 0.1);
+        .status-dot.live {
+            background: #2ecc71;
+            box-shadow: 0 0 6px #2ecc71;
+        }
+
+        .status-dot.not-live {
+            background: #e74c3c;
+            box-shadow: 0 0 6px #e74c3c;
         }
 
         .control-section {
@@ -717,6 +720,12 @@
                         <span class="product-info-label">Tax Status</span>
                         <span class="product-info-value" style="color: var(--accent-green);">Deferred</span>
                     </div>
+                    <div class="product-info-row" id="live-status-row">
+                        <span class="product-info-label">Data Status</span>
+                        <span class="product-info-value" id="live-status">
+                            <span class="status-dot"></span> Checking...
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -914,6 +923,16 @@
             
             // Update final value stat color
             document.getElementById('stat-final').style.color = color;
+            
+            // Update live status indicator
+            const liveStatusEl = document.getElementById('live-status');
+            if (product.isLive) {
+                liveStatusEl.innerHTML = '<span class="status-dot live"></span> Live Rate';
+                liveStatusEl.style.color = '#2ecc71';
+            } else {
+                liveStatusEl.innerHTML = '<span class="status-dot not-live"></span> Not Live';
+                liveStatusEl.style.color = '#e74c3c';
+            }
             
             // Update page title
             document.title = `${product.name} Compound Calculator`;
@@ -1311,88 +1330,28 @@
                 const response = await fetch('/api/yields');
                 const data = await response.json();
                 
-                if (data.error) {
-                    console.warn('Using fallback rates:', data.error);
-                }
-                
-                // Track which tickers have live data
-                const liveStatus = {
-                    SATA: data.debug?.SATA?.found || false,
-                    STRC: data.debug?.STRC?.found || false,
-                    STRD: data.debug?.STRD?.found || false,
-                    STRF: data.debug?.STRF?.found || false
-                };
-                
-                // Update product rates with live data
+                // Update product rates
                 if (data.SATA) PRODUCTS.SATA.annualRate = data.SATA;
                 if (data.STRC) PRODUCTS.STRC.annualRate = data.STRC;
                 if (data.STRD) PRODUCTS.STRD.annualRate = data.STRD;
                 if (data.STRF) PRODUCTS.STRF.annualRate = data.STRF;
                 
-                // Store live status in products
-                PRODUCTS.SATA.isLive = liveStatus.SATA;
-                PRODUCTS.STRC.isLive = liveStatus.STRC;
-                PRODUCTS.STRD.isLive = liveStatus.STRD;
-                PRODUCTS.STRF.isLive = liveStatus.STRF;
+                // Store live status
+                PRODUCTS.SATA.isLive = data.debug?.SATA?.found || false;
+                PRODUCTS.STRC.isLive = data.debug?.STRC?.found || false;
+                PRODUCTS.STRD.isLive = data.debug?.STRD?.found || false;
+                PRODUCTS.STRF.isLive = data.debug?.STRF?.found || false;
                 
-                // Store prices if available
-                if (data.prices) {
-                    PRODUCTS.SATA.price = data.prices.SATA;
-                    PRODUCTS.STRC.price = data.prices.STRC;
-                    PRODUCTS.STRD.price = data.prices.STRD;
-                    PRODUCTS.STRF.price = data.prices.STRF;
-                }
-                
-                // Update the yield displays in buttons with live indicators
-                const tickers = ['SATA', 'STRC', 'STRD', 'STRF'];
-                tickers.forEach(ticker => {
-                    const btn = document.querySelector(`[data-product="${ticker}"]`);
-                    const yieldEl = btn.querySelector('.yield');
-                    const rate = (PRODUCTS[ticker].annualRate * 100).toFixed(2);
-                    const liveIcon = liveStatus[ticker] ? '🟢' : '🟡';
-                    yieldEl.innerHTML = `${liveIcon} ${rate}%`;
+                // Update yield displays
+                ['SATA', 'STRC', 'STRD', 'STRF'].forEach(ticker => {
+                    const yieldEl = document.querySelector(`[data-product="${ticker}"] .yield`);
+                    yieldEl.textContent = (PRODUCTS[ticker].annualRate * 100).toFixed(2) + '% APY';
                 });
                 
-                // Show overall status indicator
-                const liveCount = Object.values(liveStatus).filter(v => v).length;
-                const statusEl = document.createElement('div');
-                statusEl.className = 'live-indicator';
-                
-                if (liveCount === 4) {
-                    statusEl.innerHTML = '🟢 All Live';
-                } else if (liveCount > 0) {
-                    statusEl.innerHTML = `🟡 ${liveCount}/4 Live`;
-                } else {
-                    statusEl.innerHTML = '🔴 Offline';
-                }
-                statusEl.title = 'Last updated: ' + new Date(data.lastUpdated).toLocaleString() + '\n' +
-                    'SATA: ' + (liveStatus.SATA ? 'Live' : 'Fallback') + '\n' +
-                    'STRC: ' + (liveStatus.STRC ? 'Live' : 'Fallback') + '\n' +
-                    'STRD: ' + (liveStatus.STRD ? 'Live' : 'Fallback') + '\n' +
-                    'STRF: ' + (liveStatus.STRF ? 'Live' : 'Fallback');
-                
-                const header = document.querySelector('.panel-title');
-                const existingIndicator = document.querySelector('.live-indicator');
-                if (existingIndicator) existingIndicator.remove();
-                header.appendChild(statusEl);
-                
-                // Recalculate with new rates
                 selectProduct(currentProduct);
                 
             } catch (err) {
                 console.error('Failed to fetch live yields:', err);
-                
-                // Show offline indicator
-                const statusEl = document.createElement('div');
-                statusEl.className = 'live-indicator offline';
-                statusEl.innerHTML = '🔴 Offline';
-                statusEl.title = 'Could not connect to API';
-                const header = document.querySelector('.panel-title');
-                const existingIndicator = document.querySelector('.live-indicator');
-                if (existingIndicator) existingIndicator.remove();
-                header.appendChild(statusEl);
-                
-                // Continue with default rates
                 selectProduct('SATA');
             }
         }
