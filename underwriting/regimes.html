@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC Regime Analysis | Underwriting Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="../js/btc-data.js"></script>
+    <script src="../js/utils.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        /* Page-specific styles */
+        .regime-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .regime-card.bull {
+            border-color: var(--accent-green);
+            background: rgba(0, 212, 170, 0.05);
+        }
+        
+        .regime-card.bear {
+            border-color: var(--accent-red);
+            background: rgba(255, 71, 87, 0.05);
+        }
+        
+        .regime-card.sideways {
+            border-color: var(--accent-orange);
+            background: rgba(247, 147, 26, 0.05);
+        }
+        
+        .regime-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .regime-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .regime-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .regime-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+        
+        .correlation-matrix {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .matrix-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            border-radius: 4px;
+        }
+        
+        .matrix-header {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        
+        .vol-comparison {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .vol-card {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+        
+        .vol-bar {
+            height: 100px;
+            width: 40px;
+            margin: 10px auto;
+            background: var(--border-color);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .vol-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: var(--accent-purple);
+            border-radius: 0 0 4px 4px;
+            transition: height 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="btc-icon">📊</div>
+                <h1>Correlation & Regime Behavior</h1>
+            </div>
+            <p class="subtitle">Market Regime Detection & Cross-Asset Correlation Analysis</p>
+            <a href="../index.html" class="home-btn">← Dashboard</a>
+        </header>
+
+        <div class="main-grid">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="panel-title">Regime Parameters</div>
+                
+                <div class="control-section">
+                    <div class="section-label">Analysis Window</div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Rolling Window</span>
+                            <span class="control-value" id="val-window">90 days</span>
+                        </div>
+                        <input type="range" id="window" min="30" max="365" value="90" step="30">
+                        <div class="control-hint">Window for regime calculation</div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-label">Regime Thresholds</div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Bull Threshold</span>
+                            <span class="control-value" id="val-bull">50%</span>
+                        </div>
+                        <input type="range" id="bull" min="20" max="100" value="50" step="10">
+                        <div class="control-hint">Annual return above this = Bull</div>
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Bear Threshold</span>
+                            <span class="control-value" id="val-bear">-20%</span>
+                        </div>
+                        <input type="range" id="bear" min="-50" max="0" value="-20" step="5">
+                        <div class="control-hint">Annual return below this = Bear</div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-label">Volatility Analysis</div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Vol Window</span>
+                            <span class="control-value" id="val-vol-window">30 days</span>
+                        </div>
+                        <input type="range" id="vol-window" min="7" max="90" value="30" step="7">
+                    </div>
+                </div>
+                
+                <button class="run-btn" onclick="runRegimeAnalysis()">
+                    🔬 Analyze Regimes
+                </button>
+                
+                <div class="derived-values" style="margin-top: 20px;">
+                    <div class="derived-row">
+                        <span class="derived-label">Current Regime</span>
+                        <span class="derived-value" id="current-regime" style="color: var(--text-muted)">--</span>
+                    </div>
+                    <div class="derived-row">
+                        <span class="derived-label">Current Volatility</span>
+                        <span class="derived-value" id="current-vol">--</span>
+                    </div>
+                    <div class="derived-row">
+                        <span class="derived-label">Regime Duration</span>
+                        <span class="derived-value" id="regime-duration">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Area -->
+            <div class="charts-area">
+                <!-- Regime Distribution -->
+                <div class="regime-grid">
+                    <div class="regime-card bull">
+                        <div class="regime-label" style="color: var(--accent-green)">Bull Market</div>
+                        <div class="regime-value" style="color: var(--accent-green)" id="bull-pct">--%</div>
+                        <div class="regime-sub" id="bull-days">-- days total</div>
+                    </div>
+                    <div class="regime-card sideways">
+                        <div class="regime-label" style="color: var(--accent-orange)">Sideways</div>
+                        <div class="regime-value" style="color: var(--accent-orange)" id="sideways-pct">--%</div>
+                        <div class="regime-sub" id="sideways-days">-- days total</div>
+                    </div>
+                    <div class="regime-card bear">
+                        <div class="regime-label" style="color: var(--accent-red)">Bear Market</div>
+                        <div class="regime-value" style="color: var(--accent-red)" id="bear-pct">--%</div>
+                        <div class="regime-sub" id="bear-days">-- days total</div>
+                    </div>
+                </div>
+
+                <!-- Regime Timeline -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Regime Timeline</div>
+                    </div>
+                    <div id="regime-chart" class="chart-container"></div>
+                </div>
+
+                <!-- Volatility by Regime -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Volatility by Regime</div>
+                    </div>
+                    <div class="vol-comparison">
+                        <div class="vol-card">
+                            <div style="font-size: 0.8rem; color: var(--text-muted)">Bull</div>
+                            <div class="vol-bar">
+                                <div class="vol-fill" id="vol-bull" style="height: 0%; background: var(--accent-green)"></div>
+                            </div>
+                            <div style="font-family: 'JetBrains Mono'; font-size: 0.9rem" id="vol-bull-val">--%</div>
+                        </div>
+                        <div class="vol-card">
+                            <div style="font-size: 0.8rem; color: var(--text-muted)">Sideways</div>
+                            <div class="vol-bar">
+                                <div class="vol-fill" id="vol-sideways" style="height: 0%; background: var(--accent-orange)"></div>
+                            </div>
+                            <div style="font-family: 'JetBrains Mono'; font-size: 0.9rem" id="vol-sideways-val">--%</div>
+                        </div>
+                        <div class="vol-card">
+                            <div style="font-size: 0.8rem; color: var(--text-muted)">Bear</div>
+                            <div class="vol-bar">
+                                <div class="vol-fill" id="vol-bear" style="height: 0%; background: var(--accent-red)"></div>
+                            </div>
+                            <div style="font-family: 'JetBrains Mono'; font-size: 0.9rem" id="vol-bear-val">--%</div>
+                        </div>
+                        <div class="vol-card">
+                            <div style="font-size: 0.8rem; color: var(--text-muted)">Overall</div>
+                            <div class="vol-bar">
+                                <div class="vol-fill" id="vol-overall" style="height: 0%; background: var(--accent-purple)"></div>
+                            </div>
+                            <div style="font-family: 'JetBrains Mono'; font-size: 0.9rem" id="vol-overall-val">--%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rolling Volatility Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Rolling Volatility Over Time</div>
+                    </div>
+                    <div id="vol-chart" class="chart-container"></div>
+                    <div class="context-box" id="vol-context">
+                        Volatility analysis helps calibrate risk models for different market conditions.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Regime & Correlation Analysis
+        // ==============================
+        
+        const { mean, std, formatPercent, CHART_COLORS } = window.DashboardUtils;
+        
+        let regimeResults = null;
+        
+        function runRegimeAnalysis() {
+            console.log('Running regime analysis...');
+            
+            const window = parseInt(document.getElementById('window').value);
+            const bullThreshold = parseInt(document.getElementById('bull').value) / 100;
+            const bearThreshold = parseInt(document.getElementById('bear').value) / 100;
+            const volWindow = parseInt(document.getElementById('vol-window').value);
+            
+            const data = BTC_RAW_DATA;
+            
+            // Calculate rolling returns and regimes
+            const regimes = calculateRegimes(data, window, bullThreshold, bearThreshold);
+            
+            // Calculate volatility by regime
+            const volByRegime = calculateVolatilityByRegime(data, regimes, volWindow);
+            
+            // Calculate rolling volatility
+            const rollingVol = calculateRollingVol(data, volWindow);
+            
+            regimeResults = {
+                regimes,
+                volByRegime,
+                rollingVol,
+                distribution: countRegimes(regimes)
+            };
+            
+            updateRegimeStats();
+            updateRegimeChart(data, regimes);
+            updateVolatilityBars(volByRegime);
+            updateVolatilityChart(data, rollingVol, regimes);
+        }
+        
+        function calculateRegimes(data, window, bullThreshold, bearThreshold) {
+            const regimes = [];
+            
+            for (let i = window; i < data.length; i++) {
+                const periodReturn = (data[i].price - data[i - window].price) / data[i - window].price;
+                const annualizedReturn = periodReturn * (365 / window);
+                
+                let regime;
+                if (annualizedReturn > bullThreshold) {
+                    regime = 'bull';
+                } else if (annualizedReturn < bearThreshold) {
+                    regime = 'bear';
+                } else {
+                    regime = 'sideways';
+                }
+                
+                regimes.push({
+                    date: data[i].date,
+                    price: data[i].price,
+                    return: annualizedReturn,
+                    regime
+                });
+            }
+            
+            return regimes;
+        }
+        
+        function calculateVolatilityByRegime(data, regimes, volWindow) {
+            const returns = [];
+            for (let i = 1; i < data.length; i++) {
+                returns.push(Math.log(data[i].price / data[i-1].price));
+            }
+            
+            const bullReturns = [];
+            const bearReturns = [];
+            const sidewaysReturns = [];
+            
+            regimes.forEach((r, i) => {
+                const returnIdx = i + (data.length - regimes.length);
+                if (returnIdx > 0 && returnIdx < returns.length) {
+                    const ret = returns[returnIdx];
+                    if (r.regime === 'bull') bullReturns.push(ret);
+                    else if (r.regime === 'bear') bearReturns.push(ret);
+                    else sidewaysReturns.push(ret);
+                }
+            });
+            
+            const annualize = (arr) => arr.length > 1 ? std(arr) * Math.sqrt(365) * 100 : 0;
+            
+            return {
+                bull: annualize(bullReturns),
+                bear: annualize(bearReturns),
+                sideways: annualize(sidewaysReturns),
+                overall: annualize(returns)
+            };
+        }
+        
+        function calculateRollingVol(data, window) {
+            const result = [];
+            
+            for (let i = window; i < data.length; i++) {
+                const returns = [];
+                for (let j = i - window + 1; j <= i; j++) {
+                    if (data[j-1] && data[j-1].price > 0) {
+                        returns.push(Math.log(data[j].price / data[j-1].price));
+                    }
+                }
+                
+                const vol = std(returns) * Math.sqrt(365) * 100;
+                result.push({
+                    date: data[i].date,
+                    vol
+                });
+            }
+            
+            return result;
+        }
+        
+        function countRegimes(regimes) {
+            const counts = { bull: 0, bear: 0, sideways: 0 };
+            regimes.forEach(r => counts[r.regime]++);
+            const total = regimes.length;
+            return {
+                bull: { count: counts.bull, pct: (counts.bull / total) * 100 },
+                bear: { count: counts.bear, pct: (counts.bear / total) * 100 },
+                sideways: { count: counts.sideways, pct: (counts.sideways / total) * 100 }
+            };
+        }
+        
+        function updateRegimeStats() {
+            const dist = regimeResults.distribution;
+            
+            document.getElementById('bull-pct').textContent = formatPercent(dist.bull.pct, 0);
+            document.getElementById('bull-days').textContent = dist.bull.count + ' days';
+            
+            document.getElementById('sideways-pct').textContent = formatPercent(dist.sideways.pct, 0);
+            document.getElementById('sideways-days').textContent = dist.sideways.count + ' days';
+            
+            document.getElementById('bear-pct').textContent = formatPercent(dist.bear.pct, 0);
+            document.getElementById('bear-days').textContent = dist.bear.count + ' days';
+            
+            // Current regime
+            const lastRegime = regimeResults.regimes[regimeResults.regimes.length - 1];
+            const regimeEl = document.getElementById('current-regime');
+            regimeEl.textContent = lastRegime.regime.toUpperCase();
+            regimeEl.style.color = lastRegime.regime === 'bull' ? 'var(--accent-green)' : 
+                                   lastRegime.regime === 'bear' ? 'var(--accent-red)' : 'var(--accent-orange)';
+            
+            document.getElementById('current-vol').textContent = 
+                formatPercent(regimeResults.volByRegime.overall, 1);
+            
+            // Count consecutive days in current regime
+            let duration = 0;
+            const currentRegime = lastRegime.regime;
+            for (let i = regimeResults.regimes.length - 1; i >= 0; i--) {
+                if (regimeResults.regimes[i].regime === currentRegime) duration++;
+                else break;
+            }
+            document.getElementById('regime-duration').textContent = duration + ' days';
+        }
+        
+        function updateRegimeChart(data, regimes) {
+            // Price trace
+            const priceTrace = {
+                x: regimes.map(r => r.date),
+                y: regimes.map(r => r.price),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'BTC Price',
+                line: { color: '#ffffff', width: 1 },
+                yaxis: 'y'
+            };
+            
+            // Regime background areas
+            const bullAreas = [];
+            const bearAreas = [];
+            
+            regimes.forEach((r, i) => {
+                if (i === 0) return;
+                const shapes = r.regime === 'bull' ? bullAreas : r.regime === 'bear' ? bearAreas : null;
+                if (shapes) {
+                    shapes.push({
+                        type: 'rect',
+                        xref: 'x', yref: 'paper',
+                        x0: regimes[i-1].date, x1: r.date,
+                        y0: 0, y1: 1,
+                        fillcolor: r.regime === 'bull' ? 'rgba(0,212,170,0.1)' : 'rgba(255,71,87,0.1)',
+                        line: { width: 0 }
+                    });
+                }
+            });
+            
+            Plotly.react('regime-chart', [priceTrace], {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Space Grotesk', color: '#a0a0b0' },
+                margin: { t: 10, r: 30, b: 40, l: 80 },
+                xaxis: { gridcolor: '#2a2a3a' },
+                yaxis: { 
+                    gridcolor: '#2a2a3a',
+                    type: 'log',
+                    title: 'Price ($)'
+                },
+                shapes: [...bullAreas, ...bearAreas].slice(0, 100), // Limit shapes
+                showlegend: false
+            }, { responsive: true });
+        }
+        
+        function updateVolatilityBars(volByRegime) {
+            const maxVol = Math.max(volByRegime.bull, volByRegime.bear, volByRegime.sideways, volByRegime.overall);
+            
+            ['bull', 'bear', 'sideways', 'overall'].forEach(regime => {
+                const pct = (volByRegime[regime] / maxVol) * 100;
+                document.getElementById('vol-' + regime).style.height = pct + '%';
+                document.getElementById('vol-' + regime + '-val').textContent = formatPercent(volByRegime[regime], 0);
+            });
+        }
+        
+        function updateVolatilityChart(data, rollingVol, regimes) {
+            const trace = {
+                x: rollingVol.map(v => v.date),
+                y: rollingVol.map(v => v.vol),
+                type: 'scatter',
+                mode: 'lines',
+                fill: 'tozeroy',
+                fillcolor: 'rgba(168, 85, 247, 0.2)',
+                line: { color: CHART_COLORS.jump, width: 1 },
+                name: 'Annualized Vol'
+            };
+            
+            Plotly.react('vol-chart', [trace], {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Space Grotesk', color: '#a0a0b0' },
+                margin: { t: 10, r: 30, b: 40, l: 60 },
+                xaxis: { gridcolor: '#2a2a3a' },
+                yaxis: { 
+                    gridcolor: '#2a2a3a',
+                    ticksuffix: '%',
+                    title: 'Volatility'
+                },
+                showlegend: false
+            }, { responsive: true });
+            
+            // Update context
+            const avgVol = mean(rollingVol.map(v => v.vol));
+            document.getElementById('vol-context').innerHTML = 
+                `Average annualized volatility: <b>${formatPercent(avgVol, 1)}</b>. ` +
+                `Bear markets show <b>${formatPercent(regimeResults.volByRegime.bear / regimeResults.volByRegime.bull * 100 - 100, 0)}</b> higher volatility than bull markets on average.`;
+        }
+        
+        // Initialize sliders
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', function() {
+                const valEl = document.getElementById('val-' + this.id);
+                if (valEl) {
+                    if (this.id === 'window' || this.id === 'vol-window') {
+                        valEl.textContent = this.value + ' days';
+                    } else if (this.id === 'bull' || this.id === 'bear') {
+                        valEl.textContent = this.value + '%';
+                    }
+                }
+            });
+        });
+        
+        // Auto-run on load
+        setTimeout(runRegimeAnalysis, 500);
+    </script>
+</body>
+</html>
+

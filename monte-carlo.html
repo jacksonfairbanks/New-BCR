@@ -150,6 +150,123 @@
             opacity: 0.8;
         }
 
+        .regime-btn {
+            position: relative;
+        }
+
+        .regime-tooltip {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 0;
+            width: 260px;
+            padding: 12px 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--accent-orange);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 400;
+            text-align: left;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+
+        .regime-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 30px;
+            transform: rotate(45deg);
+            width: 10px;
+            height: 10px;
+            background: var(--bg-primary);
+            border-right: 1px solid var(--accent-orange);
+            border-bottom: 1px solid var(--accent-orange);
+        }
+
+        .regime-tooltip strong {
+            color: var(--accent-orange);
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+        }
+
+        .regime-btn:hover .regime-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Position tooltips to stay within bounds */
+        #regime-current .regime-tooltip {
+            left: 0;
+        }
+        #regime-current .regime-tooltip::after {
+            left: 30px;
+        }
+
+        #regime-bear .regime-tooltip {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        #regime-bear .regime-tooltip::after {
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+        }
+
+        #regime-full .regime-tooltip {
+            left: auto;
+            right: 0;
+        }
+        #regime-full .regime-tooltip::after {
+            left: auto;
+            right: 30px;
+        }
+
+        /* Sidebar Run Simulation Button */
+        .sidebar-run-btn {
+            width: 100%;
+            padding: 16px 24px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, var(--accent-orange) 0%, #e8850f 100%);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(247, 147, 26, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .sidebar-run-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(247, 147, 26, 0.4);
+        }
+
+        .sidebar-run-btn:active {
+            transform: translateY(0);
+        }
+
+        .sidebar-run-btn .btn-icon {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-run-btn.running {
+            background: linear-gradient(135deg, #555 0%, #333 100%);
+            cursor: wait;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
         .page-footer {
             max-width: 1800px;
             margin: 40px auto 30px;
@@ -466,6 +583,117 @@
         }
         .tooltip-wide {
             width: 340px;
+        }
+
+        /* Stat card tooltips */
+        .stat-card {
+            position: relative;
+        }
+        .stat-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .stat-info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            background: var(--border-color);
+            border-radius: 50%;
+            font-size: 9px;
+            color: var(--text-muted);
+            font-weight: 700;
+            cursor: help;
+            transition: all 0.2s;
+        }
+        .stat-info-icon:hover {
+            background: var(--accent-orange);
+            color: var(--bg-primary);
+        }
+        .stat-tooltip {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 260px;
+            padding: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--accent-orange);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            pointer-events: none;
+        }
+        .stat-info-icon:hover + .stat-tooltip {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        .stat-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 10px;
+            height: 10px;
+            background: var(--bg-primary);
+            border-left: 1px solid var(--accent-orange);
+            border-top: 1px solid var(--accent-orange);
+        }
+        .stat-tooltip-title {
+            font-weight: 600;
+            color: var(--accent-orange);
+            margin-bottom: 6px;
+        }
+        .stat-tooltip-why {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+            font-style: italic;
+        }
+        .stat-tooltip-why strong {
+            color: var(--accent-green);
+            font-style: normal;
+        }
+
+        /* Editable slider values */
+        .control-value {
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            min-width: 50px;
+            text-align: right;
+        }
+        .control-value:hover {
+            background: var(--bg-tertiary);
+            color: var(--accent-orange);
+        }
+        .control-value-input {
+            width: 70px;
+            padding: 2px 6px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-orange);
+            border-radius: 4px;
+            color: var(--accent-orange);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: inherit;
+            text-align: right;
+            outline: none;
+        }
+        .control-value-input:focus {
+            box-shadow: 0 0 8px rgba(247, 147, 26, 0.3);
         }
         .bcr-table-toggle {
             margin-top: 12px;
@@ -870,6 +1098,12 @@
             <div class="control-panel">
                 <div class="panel-title">Model Parameters</div>
 
+                <!-- Top Run Simulation Button -->
+                <button class="sidebar-run-btn" id="sidebar-run-btn-top" onclick="runSimulation()" style="margin-bottom: 20px;">
+                    <span class="btn-icon">▶</span>
+                    Run Simulation
+                </button>
+
                 <!-- CAPITAL STRUCTURE SECTION -->
                 <div class="control-section">
                     <!-- BIG IMPLIED BCR DISPLAY -->
@@ -1011,7 +1245,7 @@
                             <span>Date Range</span>
                         </div>
                         <div class="date-range-group">
-                            <select id="data-start" onchange="recalibrateParams()">
+                            <select id="data-start" onchange="recalibrateParams(false)">
                                 <option value="2011">2011</option>
                                 <option value="2012">2012</option>
                                 <option value="2013">2013</option>
@@ -1028,7 +1262,7 @@
                                 <option value="2024">2024</option>
                             </select>
                             <span class="date-range-label">to</span>
-                            <select id="data-end" onchange="recalibrateParams()">
+                            <select id="data-end" onchange="recalibrateParams(false)">
                                 <option value="2015">2015</option>
                                 <option value="2016">2016</option>
                                 <option value="2017">2017</option>
@@ -1047,12 +1281,24 @@
                         <div class="regime-buttons">
                             <button class="regime-btn active" onclick="setRegime('current')" id="regime-current">
                                 Current<br><span>2021-2025</span>
+                                <div class="regime-tooltip">
+                                    <strong>Post-COVID Bull & Correction</strong><br>
+                                    Includes the 2021 ATH, 2022 crash (FTX/Luna), and 2024 ETF rally. High volatility, mixed sentiment. Best for modeling current market conditions.
+                                </div>
                             </button>
                             <button class="regime-btn" onclick="setRegime('bear')" id="regime-bear">
                                 Bear<br><span>2018-2020</span>
+                                <div class="regime-tooltip">
+                                    <strong>ICO Bust & Crypto Winter</strong><br>
+                                    Extended bear market after 2017 bubble. Tests survival through prolonged -80% drawdowns. Conservative stress test for worst-case planning.
+                                </div>
                             </button>
                             <button class="regime-btn" onclick="setRegime('full')" id="regime-full">
                                 Full Cycle<br><span>2014-2025</span>
+                                <div class="regime-tooltip">
+                                    <strong>Complete Market History</strong><br>
+                                    All BTC cycles including Mt. Gox, ICO boom/bust, COVID crash, and ETF era. Most comprehensive but may overweight early low-liquidity data.
+                                </div>
                             </button>
                         </div>
                     </div>
@@ -1060,7 +1306,7 @@
                     <div class="calibrated-params" id="calibrated-params">
                         <h5 style="display: flex; justify-content: space-between; align-items: center;">
                             <span>Model Parameters</span>
-                            <button onclick="recalibrateParams()" style="font-size: 0.65rem; padding: 3px 8px; background: var(--accent-blue); border: none; border-radius: 4px; color: white; cursor: pointer;">↻ Auto-Calibrate</button>
+                            <button onclick="recalibrateParams(false)" style="font-size: 0.65rem; padding: 3px 8px; background: var(--accent-blue); border: none; border-radius: 4px; color: white; cursor: pointer;">↻ Auto-Calibrate</button>
                         </h5>
                         <div class="param-row">
                             <span class="param-label">Volatility (σ)</span>
@@ -1160,31 +1406,72 @@
                            style="width: 100%; padding: 6px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">
                 </div>
 
+
                 </div>
 
             <div class="charts-area">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-label">Implied Amplification</div>
+                        <div class="stat-label">
+                            Implied BCR
+                            <span class="stat-info-icon">?</span>
+                            <div class="stat-tooltip">
+                                <div class="stat-tooltip-title">Balance Sheet Coverage Ratio</div>
+                                Years of dividend runway if BTC price stayed flat. BCR = BTC Reserves ÷ Annual Dividend. Higher BCR = more conservative position.
+                                <div class="stat-tooltip-why"><strong>Why it matters:</strong> The key solvency metric—how long you can survive before needing BTC appreciation.</div>
+                            </div>
+                        </div>
                         <div class="stat-value orange" id="stat-amplification">—</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">GBM Failure Rate</div>
+                        <div class="stat-label">
+                            GBM Failure Rate
+                            <span class="stat-info-icon">?</span>
+                            <div class="stat-tooltip">
+                                <div class="stat-tooltip-title">Geometric Brownian Motion Failure</div>
+                                Probability of insolvency using a lognormal price model with constant drift and volatility. This is the baseline "smooth" model.
+                                <div class="stat-tooltip-why"><strong>Why it matters:</strong> Provides a lower-bound risk estimate assuming no sudden crashes or regime changes.</div>
+                            </div>
+                        </div>
                         <div class="stat-value blue" id="stat-normal-insol">—</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Jump Diff Failure</div>
+                        <div class="stat-label">
+                            Jump Diff Failure
+                            <span class="stat-info-icon">?</span>
+                            <div class="stat-tooltip">
+                                <div class="stat-tooltip-title">Jump Diffusion Failure</div>
+                                Probability of insolvency using Merton's jump-diffusion model which adds random crash events to the baseline GBM model.
+                                <div class="stat-tooltip-why"><strong>Why it matters:</strong> Captures tail risk from sudden BTC crashes like exchange failures or regulatory shocks.</div>
+                            </div>
+                        </div>
                         <div class="stat-value" id="stat-jump-insol" style="color: var(--accent-purple);">—</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Bootstrap Failure</div>
+                        <div class="stat-label">
+                            Bootstrap Failure
+                            <span class="stat-info-icon">?</span>
+                            <div class="stat-tooltip">
+                                <div class="stat-tooltip-title">Block Bootstrap Failure</div>
+                                Probability of insolvency by resampling actual historical BTC returns in blocks, preserving autocorrelation and volatility clustering.
+                                <div class="stat-tooltip-why"><strong>Why it matters:</strong> Most realistic estimate—uses actual market behavior without distributional assumptions.</div>
+                            </div>
+                        </div>
                         <div class="stat-value green" id="stat-boot-insol">—</div>
                     </div>
                 </div>
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <div class="chart-title" id="percentile-chart-title">Terminal BCR Percentile Curves</div>
+                        <div class="chart-title" id="percentile-chart-title" style="display: flex; align-items: center; gap: 8px;">
+                            Terminal BCR Percentile Curves
+                            <span class="stat-info-icon" style="flex-shrink: 0;">?</span>
+                            <div class="stat-tooltip" style="left: 150px; transform: none; top: 30px;">
+                                <div class="stat-tooltip-title">Percentile Distribution</div>
+                                Shows the range of outcomes across all simulations. P1 = worst 1%, P50 = median, P99 = best 1%.
+                                <div class="stat-tooltip-why"><strong>Why it matters:</strong> Visualizes full risk spectrum—not just averages—so you can see tail risks.</div>
+                            </div>
+                        </div>
                         <div class="chart-controls">
                             <select id="metric-select" onchange="updatePercentileChart(); updatePercentileTable();">
                                 <option value="terminal-bcr">Terminal BCR</option>
@@ -1243,14 +1530,30 @@
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <div class="chart-title">Cumulative Failure Probability (BCR < 1)</div>
+                        <div class="chart-title" style="display: flex; align-items: center; gap: 8px;">
+                            Cumulative Failure Probability (BCR &lt; 1)
+                            <span class="stat-info-icon" style="flex-shrink: 0;">?</span>
+                            <div class="stat-tooltip" style="left: 200px; transform: none; top: 30px;">
+                                <div class="stat-tooltip-title">Time to Insolvency</div>
+                                Shows when failures occur over the simulation horizon. Steep early curves indicate high near-term risk.
+                                <div class="stat-tooltip-why"><strong>Why it matters:</strong> Reveals if failures cluster early (urgent risk) or are spread over time (manageable).</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="chart-container chart-container-small" id="insolvency-chart"></div>
                 </div>
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <div class="chart-title">BTC Price Percentile Fans (P1 / P50 / P99)</div>
+                        <div class="chart-title" style="display: flex; align-items: center; gap: 8px;">
+                            BTC Price Percentile Fans (P1 / P50 / P99)
+                            <span class="stat-info-icon" style="flex-shrink: 0;">?</span>
+                            <div class="stat-tooltip" style="left: 200px; transform: none; top: 30px;">
+                                <div class="stat-tooltip-title">Simulated Price Paths</div>
+                                Range of BTC prices generated by each model. Width shows uncertainty; P1 is the crash scenario.
+                                <div class="stat-tooltip-why"><strong>Why it matters:</strong> Validates model assumptions—compare against your price expectations.</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="chart-container chart-container-small" id="price-fan-chart"></div>
                 </div>
@@ -1258,7 +1561,15 @@
                 <!-- Sensitivity Heatmap -->
                 <div class="chart-card">
                     <div class="chart-header">
-                        <div class="chart-title">🔥 Sensitivity Heatmap: Failure Rate by Amplification × Dividend Rate</div>
+                        <div class="chart-title" style="display: flex; align-items: center; gap: 8px;">
+                            🔥 Sensitivity Heatmap: Failure Rate by Amplification × Dividend Rate
+                            <span class="stat-info-icon" style="flex-shrink: 0;">?</span>
+                            <div class="stat-tooltip" style="left: 300px; transform: none; top: 30px; width: 280px;">
+                                <div class="stat-tooltip-title">Parameter Sensitivity</div>
+                                Shows how failure probability changes across different leverage and dividend combinations. Green = safe, red = dangerous.
+                                <div class="stat-tooltip-why"><strong>Why it matters:</strong> Find the optimal operating zone—maximize yield while staying in the "green" safe region.</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="heatmap-container" id="heatmap-container">
                         <div class="heatmap-note">Run simulation to generate heatmap</div>
@@ -1538,8 +1849,8 @@
             document.querySelectorAll('.regime-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('regime-' + regime).classList.add('active');
             
-            // Recalibrate (which will auto-run simulation)
-            recalibrateParams();
+            // Recalibrate params (no auto-run - user must click Run Simulation)
+            recalibrateParams(false);
         }
 
         function recalibrateParams(autoRun = true) {
@@ -1810,10 +2121,13 @@
 
         async function runSimulation() {
             const btn = document.getElementById('run-btn');
+            const sidebarBtnTop = document.getElementById('sidebar-run-btn-top');
             const loading = document.getElementById('loading');
             const progressFill = document.getElementById('progress-fill');
 
             btn.disabled = true;
+            sidebarBtnTop.classList.add('running');
+            sidebarBtnTop.innerHTML = '<span class="btn-icon">⏳</span> Running...';
             loading.classList.add('active');
             progressFill.style.width = '0%';
 
@@ -2038,6 +2352,8 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
             progressFill.style.width = '100%';
             loading.classList.remove('active');
             btn.disabled = false;
+            sidebarBtnTop.classList.remove('running');
+            sidebarBtnTop.innerHTML = '<span class="btn-icon">▶</span> Run Simulation';
         }
 
         function calculateCumulativeFailure(failMonths, totalMonths, nSims) {
@@ -2496,29 +2812,89 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
             autoRunTimer = setTimeout(() => runSimulation(), 600);
         }
 
+        // Slider config with min/max/step for validation
+        const sliderConfig = {
+            'amplification': { min: 5, max: 100, step: 1, parse: v => parseFloat(v), suffix: '%' },
+            'div-rate': { min: 1, max: 30, step: 0.5, parse: v => parseFloat(v), suffix: '%' },
+            'cash-reserve': { min: 0, max: 36, step: 1, parse: v => parseInt(v), suffix: '' },
+            'nav': { min: 100, max: 50000, step: 100, parse: v => parseFloat(v.replace(/[^0-9.]/g, '')) * (v.toLowerCase().includes('b') ? 1000 : 1), suffix: '' },
+            'btc-fraction': { min: 0, max: 100, step: 10, parse: v => parseInt(v), suffix: '%' },
+            'horizon': { min: 1, max: 15, step: 1, parse: v => parseInt(v), suffix: '' },
+            'num-sims': { min: 500, max: 10000, step: 500, parse: v => parseInt(v.replace(/,/g, '')), suffix: '' },
+            'block-months': { min: 1, max: 24, step: 1, parse: v => parseInt(v), suffix: '' }
+        };
+
         sliders.forEach(slider => {
             const el = document.getElementById(slider.id);
             const valEl = document.getElementById('val-' + slider.id);
             el.addEventListener('input', () => {
                 valEl.textContent = slider.format(el.value);
                 updateDerivedValues();
-                scheduleAutoRun();
+                // Auto-run disabled - user must click Run Simulation button
+            });
+
+            // Make value clickable for direct input
+            valEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const config = sliderConfig[slider.id];
+                const currentVal = el.value;
+                
+                // Create input element
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'control-value-input';
+                input.value = currentVal;
+                input.setAttribute('data-slider-id', slider.id);
+                
+                // Replace span with input
+                valEl.style.display = 'none';
+                valEl.parentNode.insertBefore(input, valEl.nextSibling);
+                input.focus();
+                input.select();
+
+                // Handle input completion
+                const finishEdit = () => {
+                    let newVal = config.parse(input.value);
+                    
+                    // Clamp to valid range
+                    newVal = Math.max(config.min, Math.min(config.max, newVal));
+                    
+                    // Round to step
+                    newVal = Math.round(newVal / config.step) * config.step;
+                    
+                    // Update slider and display
+                    el.value = newVal;
+                    valEl.textContent = slider.format(newVal);
+                    valEl.style.display = '';
+                    input.remove();
+                    
+                    updateDerivedValues();
+                    // Auto-run disabled - user must click Run Simulation button
+                };
+
+                input.addEventListener('blur', finishEdit);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        finishEdit();
+                    } else if (e.key === 'Escape') {
+                        valEl.style.display = '';
+                        input.remove();
+                    }
+                });
             });
         });
 
         // Auto-run when date range changes
-        // Date range change listeners (recalibrateParams handles auto-run)
+        // Date range change listeners (recalibrateParams updates values only)
 
-        // Auto-run when calibrated params change
-        ['calib-vol', 'calib-drift', 'calib-lambda', 'calib-jump-mu', 'calib-jump-std'].forEach(id => {
-            document.getElementById(id).addEventListener('change', scheduleAutoRun);
-        });
+        // Calibrated params - no auto-run, user must click Run Simulation
+        // (Params are still editable, just won't trigger simulation automatically)
 
         // Initialize - load embedded data
         loadEmbeddedBTCData();
         updateDerivedValues();
-        // Auto-run simulation after data loads
-        setTimeout(() => runSimulation(), 300);
+        // Auto-run simulation on page load with default settings
+        setTimeout(() => runSimulation(), 500);
 
         const emptyLayout = {
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
@@ -2532,5 +2908,6 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
         Plotly.newPlot('insolvency-chart', [], emptyLayout, { responsive: true });
         Plotly.newPlot('price-fan-chart', [], emptyLayout, { responsive: true });
     </script>
+
 </body>
 </html>

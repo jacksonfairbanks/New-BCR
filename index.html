@@ -144,13 +144,54 @@
             font-weight: 500;
         }
 
+        /* Section headers */
+        .section-wrapper {
+            max-width: 1200px;
+            width: 100%;
+            margin-bottom: 50px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-left: 4px;
+        }
+
+        .section-header h3 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-muted);
+        }
+
+        .section-header .section-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border-dim) 0%, transparent 100%);
+        }
+
+        .section-header.dashboard h3 { color: var(--btc-orange); }
+        .section-header.tools h3 { color: var(--accent-cyan); }
+
         /* Tool cards grid */
         .tools-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 24px;
-            max-width: 1200px;
             width: 100%;
+        }
+        
+        .tools-grid.three-col {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        @media (max-width: 1024px) {
+            .tools-grid.three-col {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
         }
 
         .tool-card {
@@ -209,6 +250,18 @@
             --card-glow: rgba(255, 215, 0, 0.15);
         }
 
+        .tool-card.drawdowns {
+            --card-accent: rgba(255, 71, 87, 0.08);
+            --card-border: #ff4757;
+            --card-glow: rgba(255, 71, 87, 0.15);
+        }
+
+        .tool-card.regimes {
+            --card-accent: rgba(74, 158, 255, 0.08);
+            --card-border: #4a9eff;
+            --card-glow: rgba(74, 158, 255, 0.15);
+        }
+
         .card-content {
             position: relative;
             z-index: 1;
@@ -243,6 +296,14 @@
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.05) 100%);
             border-color: rgba(255, 215, 0, 0.3);
         }
+        .drawdowns .card-icon { 
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.2) 0%, rgba(255, 71, 87, 0.05) 100%);
+            border-color: rgba(255, 71, 87, 0.3);
+        }
+        .regimes .card-icon { 
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.2) 0%, rgba(74, 158, 255, 0.05) 100%);
+            border-color: rgba(74, 158, 255, 0.3);
+        }
 
         .card-title {
             font-size: 1.4rem;
@@ -257,6 +318,8 @@
         .backtest .card-title { color: var(--accent-cyan); }
         .cagr .card-title { color: var(--accent-purple); }
         .sata .card-title { color: #ffd700; }
+        .drawdowns .card-title { color: var(--accent-red); }
+        .regimes .card-title { color: var(--accent-blue); }
 
         .card-description {
             color: var(--text-secondary);
@@ -299,6 +362,8 @@
         .backtest .card-arrow { color: var(--accent-cyan); }
         .cagr .card-arrow { color: var(--accent-purple); }
         .sata .card-arrow { color: #ffd700; }
+        .drawdowns .card-arrow { color: var(--accent-red); }
+        .regimes .card-arrow { color: var(--accent-blue); }
 
         /* Footer */
         .footer {
@@ -338,74 +403,124 @@
             </p>
         </div>
 
-        <div class="tools-grid">
-            <a href="monte-carlo.html" class="tool-card monte-carlo">
-                <div class="card-content">
-                    <div class="card-icon">🎲</div>
-                    <h2 class="card-title">Monte Carlo Simulation</h2>
-                    <p class="card-description">
-                        Forward-looking risk model using GBM, Jump Diffusion, and Block Bootstrap 
-                        to stress test treasury solvency under various market regimes.
-                    </p>
-                    <div class="card-features">
-                        <span class="feature-tag">3 Price Models</span>
-                        <span class="feature-tag">BCR Analysis</span>
-                        <span class="feature-tag">Insolvency Risk</span>
+        <!-- Dashboard Section -->
+        <div class="section-wrapper">
+            <div class="section-header dashboard">
+                <h3>Dashboard</h3>
+                <div class="section-line"></div>
+            </div>
+            <div class="tools-grid three-col">
+                <a href="monte-carlo.html" class="tool-card monte-carlo">
+                    <div class="card-content">
+                        <div class="card-icon">🎲</div>
+                        <h2 class="card-title">Monte Carlo Simulation</h2>
+                        <p class="card-description">
+                            Forward-looking risk model using GBM, Jump Diffusion, and Block Bootstrap 
+                            to stress test treasury solvency under various market regimes.
+                        </p>
+                        <div class="card-features">
+                            <span class="feature-tag">3 Price Models</span>
+                            <span class="feature-tag">BCR Analysis</span>
+                            <span class="feature-tag">Insolvency Risk</span>
+                        </div>
                     </div>
-                </div>
-                <span class="card-arrow">→</span>
-            </a>
+                    <span class="card-arrow">→</span>
+                </a>
 
-            <a href="rolling-backtest.html" class="tool-card backtest">
-                <div class="card-content">
-                    <div class="card-icon">📈</div>
-                    <h2 class="card-title">Rolling Backtest</h2>
-                    <p class="card-description">
-                        Historical simulation showing how leveraged treasury strategies 
-                        would have performed across every possible starting point since 2014.
-                    </p>
-                    <div class="card-features">
-                        <span class="feature-tag">Historical Paths</span>
-                        <span class="feature-tag">Drawdown Analysis</span>
-                        <span class="feature-tag">Survival Rate</span>
+                <a href="underwriting/drawdowns.html" class="tool-card drawdowns">
+                    <div class="card-content">
+                        <div class="card-icon">📉</div>
+                        <h2 class="card-title">Drawdowns & Path Dependency</h2>
+                        <p class="card-description">
+                            Analyze historical drawdown events and their impact on treasury BCR.
+                            Understand path dependency and recovery patterns.
+                        </p>
+                        <div class="card-features">
+                            <span class="feature-tag">Drawdown History</span>
+                            <span class="feature-tag">BCR Impact</span>
+                            <span class="feature-tag">Recovery Time</span>
+                        </div>
                     </div>
-                </div>
-                <span class="card-arrow">→</span>
-            </a>
+                    <span class="card-arrow">→</span>
+                </a>
 
-            <a href="cagr.html" class="tool-card cagr">
-                <div class="card-content">
-                    <div class="card-icon">📊</div>
-                    <h2 class="card-title">Rolling CAGR Analysis</h2>
-                    <p class="card-description">
-                        Visualize Bitcoin's annualized returns across different holding periods.
-                        Understand return distributions and percentile rankings over time.
-                    </p>
-                    <div class="card-features">
-                        <span class="feature-tag">1-10 Year Windows</span>
-                        <span class="feature-tag">Percentile Curve</span>
-                        <span class="feature-tag">Price Overlay</span>
+                <a href="underwriting/regimes.html" class="tool-card regimes">
+                    <div class="card-content">
+                        <div class="card-icon">🌡️</div>
+                        <h2 class="card-title">Regime & Correlation</h2>
+                        <p class="card-description">
+                            Market regime detection and volatility analysis. Understand how Bitcoin 
+                            behaves across bull, bear, and sideways markets.
+                        </p>
+                        <div class="card-features">
+                            <span class="feature-tag">Regime Detection</span>
+                            <span class="feature-tag">Vol Analysis</span>
+                            <span class="feature-tag">Correlation</span>
+                        </div>
                     </div>
-                </div>
-                <span class="card-arrow">→</span>
-            </a>
+                    <span class="card-arrow">→</span>
+                </a>
+            </div>
+        </div>
 
-            <a href="sata-calculator.html" class="tool-card sata">
-                <div class="card-content">
-                    <div class="card-icon">💰</div>
-                    <h2 class="card-title">$SATA Calculator</h2>
-                    <p class="card-description">
-                        Compound interest calculator for $SATA fixed income product.
-                        12% APY paid monthly with tax-deferred growth advantages.
-                    </p>
-                    <div class="card-features">
-                        <span class="feature-tag">12% APY</span>
-                        <span class="feature-tag">Monthly Dividends</span>
-                        <span class="feature-tag">Tax-Deferred</span>
+        <!-- Tools Section -->
+        <div class="section-wrapper">
+            <div class="section-header tools">
+                <h3>Tools</h3>
+                <div class="section-line"></div>
+            </div>
+            <div class="tools-grid three-col">
+                <a href="sata-calculator.html" class="tool-card sata">
+                    <div class="card-content">
+                        <div class="card-icon">💰</div>
+                        <h2 class="card-title">Preferred Share Calculator</h2>
+                        <p class="card-description">
+                            Compound interest calculator for $SATA, $STRD, $STRF, and $STRC 
+                            fixed income products with tax-deferred growth.
+                        </p>
+                        <div class="card-features">
+                            <span class="feature-tag">Live Yields</span>
+                            <span class="feature-tag">Monthly Dividends</span>
+                            <span class="feature-tag">Tax-Deferred</span>
+                        </div>
                     </div>
-                </div>
-                <span class="card-arrow">→</span>
-            </a>
+                    <span class="card-arrow">→</span>
+                </a>
+
+                <a href="rolling-backtest.html" class="tool-card backtest">
+                    <div class="card-content">
+                        <div class="card-icon">📈</div>
+                        <h2 class="card-title">Rolling Backtest</h2>
+                        <p class="card-description">
+                            Historical simulation showing how leveraged treasury strategies 
+                            would have performed across every possible starting point since 2014.
+                        </p>
+                        <div class="card-features">
+                            <span class="feature-tag">Historical Paths</span>
+                            <span class="feature-tag">Drawdown Analysis</span>
+                            <span class="feature-tag">Survival Rate</span>
+                        </div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </a>
+
+                <a href="cagr.html" class="tool-card cagr">
+                    <div class="card-content">
+                        <div class="card-icon">📊</div>
+                        <h2 class="card-title">Rolling CAGR Analysis</h2>
+                        <p class="card-description">
+                            Visualize Bitcoin's annualized returns across different holding periods.
+                            Understand return distributions and percentile rankings over time.
+                        </p>
+                        <div class="card-features">
+                            <span class="feature-tag">1-10 Year Windows</span>
+                            <span class="feature-tag">Percentile Curve</span>
+                            <span class="feature-tag">Price Overlay</span>
+                        </div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </a>
+            </div>
         </div>
 
         <div class="footer">

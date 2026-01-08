@@ -806,7 +806,7 @@
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <div class="chart-title">Terminal BCR Percentile Curves</div>
+                        <div class="chart-title" id="percentile-chart-title">Terminal BCR Percentile Curves</div>
                         <div class="chart-controls">
                             <select id="metric-select" onchange="updatePercentileChart(); updatePercentileTable();">
                                 <option value="terminal-bcr">Terminal BCR</option>
@@ -1672,74 +1672,63 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
             const metric = document.getElementById('metric-select').value;
             const r = simulationResults;
 
-            let lnData, jData, bData, yLabel;
+            let lnData, jData, bData, yLabel, failureY, failureName;
+            
             switch (metric) {
                 case 'terminal-bcr':
-                    lnData = r.lognorm.terminalBCR; jData = r.jump.terminalBCR; bData = r.bootstrap.terminalBCR;
-                    yLabel = 'Terminal BCR (x)'; break;
+                    lnData = r.lognorm.terminalBCR; 
+                    jData = r.jump.terminalBCR; 
+                    bData = r.bootstrap.terminalBCR;
+                    yLabel = 'Terminal BCR (x)';
+                    failureY = 1;
+                    failureName = '1.0x Threshold';
+                    break;
                 case 'min-bcr':
-                    lnData = r.lognorm.minBCR; jData = r.jump.minBCR; bData = r.bootstrap.minBCR;
-                    yLabel = 'Minimum BCR (x)'; break;
+                    lnData = r.lognorm.minBCR; 
+                    jData = r.jump.minBCR; 
+                    bData = r.bootstrap.minBCR;
+                    yLabel = 'Minimum BCR (x)';
+                    failureY = 1;
+                    failureName = '1.0x Threshold';
+                    break;
                 case 'terminal-nav':
-                    lnData = r.lognorm.terminalNAV; jData = r.jump.terminalNAV; bData = r.bootstrap.terminalNAV;
-                    yLabel = 'Terminal NAV ($)'; break;
+                    lnData = r.lognorm.terminalNAV; 
+                    jData = r.jump.terminalNAV; 
+                    bData = r.bootstrap.terminalNAV;
+                    yLabel = 'Terminal NAV ($)';
+                    // Calculate annual dividend for failure line
+                    const navInit = parseFloat(document.getElementById('treasury-scale').value) * 1e9;
+                    const bcr = parseFloat(document.getElementById('bcr').value);
+                    const div = parseFloat(document.getElementById('div-rate').value) / 100;
+                    const ppeLev = 1 / (bcr * div);
+                    failureY = navInit * ppeLev * div;
+                    failureName = 'Failure ($' + (failureY / 1e9).toFixed(1) + 'B)';
+                    break;
             }
-
-            // Use all 99 percentiles for smooth curves (like your Python code)
-            const pcts = Array.from({ length: 99 }, (_, i) => i + 1);  // 1 to 99
             
-            // Key percentiles for x-axis ticks
+            // Update chart title
+            document.getElementById('percentile-chart-title').textContent = 
+                metric === 'terminal-nav' ? 'Terminal NAV Percentile Curves' :
+                metric === 'min-bcr' ? 'Minimum BCR Percentile Curves' : 
+                'Terminal BCR Percentile Curves';
+
+            const pcts = Array.from({ length: 99 }, (_, i) => i + 1);
             const tickVals = [1, 5, 10, 25, 50, 75, 90, 95, 99];
-            const tickLabels = tickVals.map(p => p + '%');
 
             const traces = [
-                { 
-                    x: pcts, 
-                    y: pcts.map(p => percentile(lnData, p)), 
-                    name: 'Lognormal', 
-                    line: { color: '#4a9eff', width: 2.5 },
-                    marker: { size: 0 }
-                },
-                { 
-                    x: pcts, 
-                    y: pcts.map(p => percentile(jData, p)), 
-                    name: 'Jump Diffusion', 
-                    line: { color: '#a855f7', width: 2.5 },
-                    marker: { size: 0 }
-                },
-                { 
-                    x: pcts, 
-                    y: pcts.map(p => percentile(bData, p)), 
-                    name: 'Bootstrap', 
-                    line: { color: '#00d4aa', width: 2.5 },
-                    marker: { size: 0 }
-                }
+                { x: pcts, y: pcts.map(p => percentile(lnData, p)), name: 'Lognormal', line: { color: '#4a9eff', width: 2.5 } },
+                { x: pcts, y: pcts.map(p => percentile(jData, p)), name: 'Jump Diffusion', line: { color: '#a855f7', width: 2.5 } },
+                { x: pcts, y: pcts.map(p => percentile(bData, p)), name: 'Bootstrap', line: { color: '#00d4aa', width: 2.5 } },
+                { x: [1, 99], y: [failureY, failureY], name: failureName, line: { color: '#ff4757', width: 2, dash: 'dash' } }
             ].map(t => ({ ...t, type: 'scatter', mode: 'lines' }));
 
-            if (metric !== 'terminal-nav') {
-                traces.push({
-                    x: [1, 99], y: [1, 1],
-                    name: '1.0x Threshold', type: 'scatter', mode: 'lines',
-                    line: { color: '#ff4757', width: 2, dash: 'dash' }
-                });
-            }
-
-            Plotly.newPlot('percentile-chart', traces, {
-                paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            Plotly.react('percentile-chart', traces, {
+                paper_bgcolor: 'rgba(0,0,0,0)', 
+                plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { family: 'Space Grotesk', color: '#a0a0b0' },
                 margin: { t: 20, r: 30, b: 50, l: 80 },
-                xaxis: { 
-                    title: 'Percentile (%)', 
-                    gridcolor: '#2a2a3a',
-                    tickvals: tickVals,
-                    ticktext: tickLabels
-                },
-                yaxis: { 
-                    title: yLabel, 
-                    gridcolor: '#2a2a3a', 
-                    type: metric === 'terminal-nav' ? 'linear' : 'log', 
-                    tickformat: metric === 'terminal-nav' ? '$.2s' : '.1f' 
-                },
+                xaxis: { title: 'Percentile (%)', gridcolor: '#2a2a3a', tickvals: tickVals, ticktext: tickVals.map(p => p + '%') },
+                yaxis: { title: yLabel, gridcolor: '#2a2a3a', type: 'log', dtick: 1 },
                 showlegend: true,
                 legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(0,0,0,0.5)' },
                 hovermode: 'x unified'
