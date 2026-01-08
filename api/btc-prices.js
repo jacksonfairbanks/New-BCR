@@ -1,7 +1,7 @@
 // Vercel Serverless Function - Fetches BTC historical prices
 // Uses MASSIVE API (primary) with CoinGecko as fallback
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET');
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400'); // Cache 1 hour
@@ -102,4 +102,4 @@ module.exports = async (req, res) => {
             error: error.message
         });
     }
-};
+}
