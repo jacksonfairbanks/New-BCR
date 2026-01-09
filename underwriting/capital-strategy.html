@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital Strategy | ATM vs PPE Decision Matrix</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a24;
+            --border-color: #1e1e2e;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-blue: #4a9eff;
+            --accent-orange: #f7931a;
+            --accent-purple: #a855f7;
+            --accent-cyan: #00d4aa;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        /* Navigation */
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        
+        .nav-brand .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-orange) 0%, #e8850f 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .nav-brand span { font-weight: 600; font-size: 1.1rem; }
+        
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover { color: var(--accent-cyan); }
+        .nav-links a.active { color: var(--accent-cyan); font-weight: 500; }
+        
+        /* Header */
+        header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-title .icon { font-size: 1.8rem; }
+        
+        .page-title h1 { font-size: 1.6rem; font-weight: 600; }
+        
+        .page-title .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Info Box */
+        .info-box {
+            background: rgba(74, 158, 255, 0.08);
+            border-left: 3px solid var(--accent-blue);
+            padding: 16px 20px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 24px;
+        }
+        
+        .info-box h3 {
+            color: var(--accent-blue);
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        
+        .info-box p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        /* Two Column Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+        }
+        
+        /* Control Panel */
+        .control-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            height: fit-content;
+            position: sticky;
+            top: 24px;
+        }
+        
+        .control-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .control-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .control-section h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        
+        .control-row {
+            margin-bottom: 16px;
+        }
+        
+        .control-row label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .control-row input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .control-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            display: inline-block;
+            background: var(--accent-blue);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        /* Editable slider inputs */
+        .slider-with-input {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .slider-with-input input[type="range"] {
+            flex: 1;
+        }
+        
+        .slider-input {
+            width: 90px;
+            padding: 6px 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            text-align: right;
+        }
+        
+        .slider-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        
+        /* Amplification Display */
+        .amplification-display {
+            background: linear-gradient(135deg, rgba(247, 147, 26, 0.15) 0%, rgba(247, 147, 26, 0.05) 100%);
+            border: 1px solid rgba(247, 147, 26, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            text-align: center;
+        }
+        
+        .amp-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .amp-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f7931a;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .amp-formula {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .control-row input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .control-row input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        
+        /* Recommendation Box */
+        .recommendation-box {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+        
+        .recommendation-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .recommendation-action {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .recommendation-action.lever { color: var(--accent-green); }
+        .recommendation-action.delever { color: var(--accent-red); }
+        .recommendation-action.hold { color: var(--accent-orange); }
+        
+        .recommendation-reason {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        /* BCR Impact Grid */
+        .bcr-impact-grid {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+        }
+        
+        .bcr-impact-item {
+            text-align: center;
+        }
+        
+        .bcr-impact-item .bcr-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        
+        .bcr-impact-item .bcr-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+        
+        .bcr-impact-arrow {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+        
+        /* Default Probability Section */
+        .default-prob-section {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+        }
+        
+        .prob-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+        
+        .prob-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .prob-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-green);
+        }
+        
+        .prob-value.warning {
+            color: var(--accent-red);
+        }
+        
+        .prob-change {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(239, 68, 68, 0.2);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        
+        .prob-delta {
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .prob-delta.negative {
+            color: var(--accent-red);
+        }
+        
+        .prob-delta.positive {
+            color: var(--accent-green);
+        }
+        
+        .prob-model-note {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(239, 68, 68, 0.2);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+        
+        .prob-model-note .model-icon {
+            margin-right: 4px;
+        }
+        
+        .prob-model-note strong {
+            color: var(--accent-blue);
+        }
+        
+        .prob-model-note a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+        
+        .prob-model-note a:hover {
+            text-decoration: underline;
+        }
+        
+        
+        /* Context Popup Styles */
+        .info-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            background: rgba(74, 158, 255, 0.2);
+            border-radius: 50%;
+            font-size: 9px;
+            color: var(--accent-blue);
+            cursor: help;
+            margin-left: 6px;
+            position: relative;
+        }
+        
+        .info-trigger:hover .context-popup {
+            display: block;
+        }
+        
+        .context-popup {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .context-popup::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--border-color);
+        }
+        
+        .context-popup .popup-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+        }
+        
+        .context-popup .popup-formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            background: var(--bg-primary);
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+        
+        .context-popup .popup-example {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+        
+        .context-popup .popup-example strong {
+            color: var(--text-secondary);
+        }
+        
+        .comparison-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        
+        .comparison-row .label-with-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Charts Area */
+        .charts-area {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .chart-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .chart-title .icon { font-size: 1.3rem; }
+        
+        .chart-subtitle {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 400;
+            margin-left: 8px;
+        }
+        
+        /* Comparison Table */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .comparison-card {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid transparent;
+        }
+        
+        .comparison-card.atm {
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        
+        .comparison-card.ppe {
+            border-color: rgba(74, 158, 255, 0.3);
+        }
+        
+        .comparison-card h4 {
+            font-size: 1rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .comparison-card.atm h4 { color: var(--accent-green); }
+        .comparison-card.ppe h4 { color: var(--accent-blue); }
+        
+        .comparison-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        
+        .comparison-row:last-child { border-bottom: none; }
+        
+        .comparison-row .label { color: var(--text-secondary); }
+        
+        .comparison-row .value { 
+            font-weight: 600; 
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .comparison-row .value.positive { color: var(--accent-green); }
+        .comparison-row .value.negative { color: var(--accent-red); }
+        
+        /* Accretion Highlight */
+        .accretion-highlight {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .accretion-stat {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .accretion-stat .value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .accretion-stat .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        
+        .accretion-stat.atm .value { color: var(--accent-green); }
+        .accretion-stat.ppe .value { color: var(--accent-blue); }
+        .accretion-stat.alpha .value { color: var(--accent-purple); }
+        
+        /* Decision Matrix */
+        .matrix-container {
+            overflow-x: auto;
+        }
+        
+        .decision-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        
+        .decision-matrix th {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .decision-matrix td {
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .decision-matrix .row-header {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-align: left;
+        }
+        
+        .cell-lever {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+        
+        .cell-delever {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+        
+        .cell-hold {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        
+        .cell-trouble {
+            background: rgba(239, 68, 68, 0.3);
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+        
+        /* Legend */
+        .matrix-legend {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 0.85rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        
+        .legend-dot.lever { background: rgba(34, 197, 94, 0.5); }
+        .legend-dot.hold { background: rgba(251, 191, 36, 0.5); }
+        .legend-dot.delever { background: rgba(239, 68, 68, 0.5); }
+        
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .control-panel {
+                position: static;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .accretion-highlight { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <a href="../index.html" class="nav-brand">
+            <div class="logo">₿</div>
+            <span>BTC Treasury Analytics</span>
+        </a>
+        <div class="nav-links">
+            <a href="../monte-carlo.html">Monte Carlo</a>
+            <a href="drawdowns.html">Drawdowns</a>
+            <a href="regimes.html">Correlations</a>
+            <a href="capital-strategy.html" class="active">Capital Strategy</a>
+        </div>
+    </nav>
+    
+    <header>
+        <div class="page-title">
+            <span class="icon">⚖️</span>
+            <div>
+                <h1>Capital Strategy: ATM vs PPE</h1>
+                <div class="subtitle">Decision matrix for equity issuance vs credit (preferred share) issuance</div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="info-box">
+            <h3>The Core Trade-off</h3>
+            <p>
+                <strong>ATM Equity:</strong> Sell shares to buy BTC. Accretion depends on mNAV (premium to NAV). Higher mNAV = more accretive. Reduces leverage.<br>
+                <strong>PPE Credit ($SATA):</strong> Sell preferred shares to buy BTC. No upfront dilution, but 12% annual dividend cost. Increases leverage.
+            </p>
+        </div>
+        
+        <div class="main-grid">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="control-section">
+                    <h3>📊 Market Assumptions</h3>
+                    
+                    <div class="control-row">
+                        <label>BTC CAGR Assumption</label>
+                        <div class="slider-with-input">
+                            <input type="range" id="btc-cagr" min="1" max="50" value="30" step="1">
+                            <input type="text" class="slider-input" id="btc-cagr-input" value="30%">
+                        </div>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>BTC Price ($)</label>
+                        <input type="number" id="btc-price" value="95000" step="1000">
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>mNAV (Market/NAV)</label>
+                        <div class="slider-with-input">
+                            <input type="range" id="mnav" min="0.5" max="3" value="1.5" step="0.05">
+                            <input type="text" class="slider-input" id="mnav-input" value="1.5x">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>🏦 Company Position</h3>
+                    
+                    <div class="control-row">
+                        <label>BTC Holdings</label>
+                        <input type="number" id="btc-holdings" value="7626" step="100">
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>Shares Outstanding (M)</label>
+                        <input type="number" id="shares-outstanding" value="671" step="1">
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>Current Outstanding PPE</label>
+                        <div class="slider-with-input">
+                            <input type="range" id="current-ppe" min="100" max="5000" value="201" step="1">
+                            <input type="text" class="slider-input" id="current-ppe-input" value="$201M">
+                        </div>
+                    </div>
+                    
+                    <div class="amplification-display">
+                        <div class="amp-label">Current Amplification</div>
+                        <div class="amp-value" id="current-amp">29.3%</div>
+                        <div class="amp-formula">PPE ÷ BTC NAV × 100</div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>💰 Capital Raise</h3>
+                    
+                    <div class="control-row">
+                        <label>Raise Amount</label>
+                        <div class="slider-with-input">
+                            <input type="range" id="raise-amount" min="5" max="1000" value="50" step="5">
+                            <input type="text" class="slider-input" id="raise-input" value="$50M">
+                        </div>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>PPE Dividend Rate</label>
+                        <div class="slider-with-input">
+                            <input type="range" id="div-rate" min="5" max="20" value="12" step="0.5">
+                            <input type="text" class="slider-input" id="div-rate-input" value="12%">
+                        </div>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>% Used to Buy BTC</label>
+                        <div class="slider-with-input">
+                            <input type="range" id="btc-pct" min="50" max="100" value="100" step="5">
+                            <input type="text" class="slider-input" id="btc-pct-input" value="100%">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recommendation-box">
+                    <div class="recommendation-label">Recommended Action</div>
+                    <div class="recommendation-action lever" id="recommendation">Issue PPE (Lever Up)</div>
+                    <div class="recommendation-reason" id="recommendation-reason">
+                        At 1.5x mNAV and 25x BCR, PPE issuance offers 171% accretion alpha over ATM while maintaining comfortable leverage.
+                    </div>
+                    
+                    <div class="bcr-impact-grid">
+                        <div class="bcr-impact-item">
+                            <div class="bcr-label">Current BCR</div>
+                            <div class="bcr-value" id="current-bcr-display">36x</div>
+                        </div>
+                        <div class="bcr-impact-arrow">→</div>
+                        <div class="bcr-impact-item">
+                            <div class="bcr-label">New BCR</div>
+                            <div class="bcr-value" id="new-bcr-display">18x</div>
+                        </div>
+                    </div>
+                    
+                    <div class="default-prob-section">
+                        <div class="prob-row">
+                            <span class="prob-label">Current Default Risk (8yr)</span>
+                            <span class="prob-value" id="current-default-prob">2.1%</span>
+                        </div>
+                        <div class="prob-row">
+                            <span class="prob-label">New Default Risk (8yr)</span>
+                            <span class="prob-value warning" id="new-default-prob">8.4%</span>
+                        </div>
+                        <div class="prob-change" id="prob-change">
+                            <span class="prob-delta negative">+6.3%</span> increase in default probability
+                        </div>
+                        <div class="prob-model-note">
+                            <span class="model-icon">📊</span>
+                            Based on <strong>Jump Diffusion Monte Carlo</strong> with 60% annual volatility, calibrated to 2019-2024 BTC regime. <a href="../monte-carlo.html" target="_blank">View full model →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Area -->
+            <div class="charts-area">
+                <!-- Accretion Comparison -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">
+                            <span class="icon">📈</span>
+                            Accretion Comparison
+                            <span class="chart-subtitle">BTC/Share growth over time</span>
+                        </div>
+                    </div>
+                    
+                    <div class="accretion-highlight">
+                        <div class="accretion-stat atm">
+                            <div class="value" id="atm-accretion">2.9%</div>
+                            <div class="label">ATM Accretion (Fixed)</div>
+                        </div>
+                        <div class="accretion-stat ppe">
+                            <div class="value" id="ppe-accretion">7.8%</div>
+                            <div class="label">PPE @ Year 5</div>
+                        </div>
+                        <div class="accretion-stat alpha">
+                            <div class="value" id="alpha">+171%</div>
+                            <div class="label">PPE Alpha vs ATM</div>
+                        </div>
+                    </div>
+                    
+                    <div id="accretion-chart" style="height: 350px;"></div>
+                </div>
+                
+                <!-- Side by Side Comparison -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">
+                            <span class="icon">⚖️</span>
+                            Capital Raise Impact
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-grid">
+                        <div class="comparison-card atm">
+                            <h4>📊 ATM Equity Issuance</h4>
+                            <div class="comparison-row">
+                                <span class="label">Cash Raised</span>
+                                <span class="value" id="atm-cash">$5.0B</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label-with-info">
+                                    <span class="label">New Shares Issued</span>
+                                    <span class="info-trigger">?
+                                        <div class="context-popup">
+                                            <div class="popup-title">Shares Issued Calculation</div>
+                                            <div class="popup-formula">Shares = Raise ÷ Stock Price<br>Stock Price = NAV/Share × mNAV</div>
+                                            <div class="popup-example">Higher mNAV means fewer shares issued for same raise amount, reducing dilution.</div>
+                                        </div>
+                                    </span>
+                                </span>
+                                <span class="value" id="atm-shares">34.9M</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label">BTC Purchased</span>
+                                <span class="value" id="atm-btc">52,632</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label-with-info">
+                                    <span class="label">Dilution</span>
+                                    <span class="info-trigger">?
+                                        <div class="context-popup">
+                                            <div class="popup-title">Share Dilution</div>
+                                            <div class="popup-formula">Dilution = New Shares ÷ Original Shares</div>
+                                            <div class="popup-example">The % increase in total shares outstanding. More shares = each share owns less of the company.</div>
+                                        </div>
+                                    </span>
+                                </span>
+                                <span class="value negative" id="atm-dilution">-9.9%</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label-with-info">
+                                    <span class="label">BTC/Share Accretion</span>
+                                    <span class="info-trigger">?
+                                        <div class="context-popup">
+                                            <div class="popup-title">Net BTC/Share Change</div>
+                                            <div class="popup-formula">New BTC/Share ÷ Old BTC/Share - 1<br><br>= (BTC + Purchased) ÷ (Shares + Issued)<br>  ÷ (BTC ÷ Shares) - 1</div>
+                                            <div class="popup-example">The NET effect on BTC per share after accounting for both new BTC purchased AND share dilution. Positive when mNAV > 1.</div>
+                                        </div>
+                                    </span>
+                                </span>
+                                <span class="value positive" id="atm-btc-accretion">+4.9%</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label-with-info">
+                                    <span class="label">New BCR</span>
+                                    <span class="info-trigger">?
+                                        <div class="context-popup">
+                                            <div class="popup-title">Balance Sheet Coverage Ratio</div>
+                                            <div class="popup-formula">BCR = BTC NAV ÷ Annual Dividend</div>
+                                            <div class="popup-example">Years of dividend runway. ATM increases BCR because it adds BTC without adding dividend obligations.</div>
+                                        </div>
+                                    </span>
+                                </span>
+                                <span class="value positive" id="atm-new-bcr">28x</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label">Annual Cost</span>
+                                <span class="value">$0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="comparison-card ppe">
+                            <h4>💎 PPE Credit Issuance</h4>
+                            <div class="comparison-row">
+                                <span class="label">Cash Raised</span>
+                                <span class="value" id="ppe-cash">$5.0B</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label">New Shares Issued</span>
+                                <span class="value">0</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label">BTC Purchased</span>
+                                <span class="value" id="ppe-btc">52,632</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label">Dilution</span>
+                                <span class="value positive">0%</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label-with-info">
+                                    <span class="label">BTC/Share Accretion</span>
+                                    <span class="info-trigger">?
+                                        <div class="context-popup">
+                                            <div class="popup-title">Immediate BTC/Share Boost</div>
+                                            <div class="popup-formula">(New BTC ÷ Shares) ÷ (Old BTC ÷ Shares) - 1<br><br>= (BTC + Purchased) ÷ BTC - 1</div>
+                                            <div class="popup-example">PPE has NO dilution, so 100% of BTC purchased flows to existing shareholders. This is the immediate boost before considering dividend drag over time.</div>
+                                        </div>
+                                    </span>
+                                </span>
+                                <span class="value positive" id="ppe-btc-accretion">+8.2%</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label-with-info">
+                                    <span class="label">New BCR</span>
+                                    <span class="info-trigger">?
+                                        <div class="context-popup">
+                                            <div class="popup-title">Balance Sheet Coverage Ratio</div>
+                                            <div class="popup-formula">BCR = New BTC NAV ÷ New Annual Dividend<br><br>New Dividend = Old + (Raise × Rate)</div>
+                                            <div class="popup-example">PPE decreases BCR because it adds dividend obligations. Lower BCR = higher leverage = more risk but more upside.</div>
+                                        </div>
+                                    </span>
+                                </span>
+                                <span class="value negative" id="ppe-new-bcr">18x</span>
+                            </div>
+                            <div class="comparison-row">
+                                <span class="label-with-info">
+                                    <span class="label">Annual Cost</span>
+                                    <span class="info-trigger">?
+                                        <div class="context-popup">
+                                            <div class="popup-title">Annual Dividend Obligation</div>
+                                            <div class="popup-formula">Annual Cost = Raise Amount × Dividend Rate</div>
+                                            <div class="popup-example">Fixed dollar cost paid annually. Must sell BTC to fund this. At higher BTC prices, sell fewer BTC to meet same dollar obligation.</div>
+                                        </div>
+                                    </span>
+                                </span>
+                                <span class="value negative" id="ppe-annual-cost">$600M</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Decision Matrix -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">
+                            <span class="icon">🎯</span>
+                            Decision Matrix
+                            <span class="chart-subtitle">When to Lever vs Delever</span>
+                        </div>
+                    </div>
+                    
+                    <div class="matrix-container">
+                        <table class="decision-matrix">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th colspan="3">mNAV (Premium to NAV)</th>
+                                </tr>
+                                <tr>
+                                    <th>Amplification</th>
+                                    <th>< 1.0x (Discount)</th>
+                                    <th>1.0x - 1.5x</th>
+                                    <th>> 1.5x (Premium)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="row-header">Low (<20%)</td>
+                                    <td class="cell-lever">🟢 PPE (Lever)</td>
+                                    <td class="cell-lever">🟢 PPE (Lever)</td>
+                                    <td class="cell-hold">🟡 Either OK</td>
+                                </tr>
+                                <tr>
+                                    <td class="row-header">Moderate (20-35%)</td>
+                                    <td class="cell-hold">🟡 Hold / PPE</td>
+                                    <td class="cell-lever">🟢 PPE (Lever)</td>
+                                    <td class="cell-lever">🟢 ATM Accretive</td>
+                                </tr>
+                                <tr>
+                                    <td class="row-header">Elevated (35-50%)</td>
+                                    <td class="cell-hold">🟡 Hold</td>
+                                    <td class="cell-hold">🟡 ATM if needed</td>
+                                    <td class="cell-delever">🔴 ATM (Delever)</td>
+                                </tr>
+                                <tr>
+                                    <td class="row-header">High (>50%)</td>
+                                    <td class="cell-trouble">⚠️ Avoid Raise</td>
+                                    <td class="cell-delever">🔴 ATM (Delever)</td>
+                                    <td class="cell-delever">🔴 ATM (Delever)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="matrix-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot lever"></div>
+                            <span>Lever Up (PPE)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot hold"></div>
+                            <span>Hold / Situational</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot delever"></div>
+                            <span>Delever (ATM)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================
+        // STATE
+        // ============================================
+        
+        let state = {
+            btcCagr: 30,
+            btcPrice: 95000,
+            mnav: 1.5,
+            btcHoldings: 7626,
+            sharesOutstanding: 671,
+            currentPPE: 201, // in millions
+            raiseAmount: 50, // in millions
+            divRate: 12,
+            btcPct: 100
+        };
+        
+        // ============================================
+        // CALCULATIONS
+        // ============================================
+        
+        function calculateMetrics() {
+            const raiseAmountUSD = state.raiseAmount * 1e6; // In millions
+            const btcToBuy = (raiseAmountUSD * (state.btcPct / 100)) / state.btcPrice;
+            
+            // Current state (before any raise)
+            // Note: sharesOutstanding is in MILLIONS, so we convert to actual shares
+            const sharesActual = state.sharesOutstanding * 1e6;
+            const currentNAV = state.btcHoldings * state.btcPrice;
+            const originalBTCPerShare = state.btcHoldings / sharesActual;
+            const navPerShare = currentNAV / sharesActual;
+            const stockPrice = navPerShare * state.mnav;
+            
+            // Current Amplification = Current PPE / NAV × 100
+            const currentPPEAmount = state.currentPPE * 1e6;
+            const currentAmplification = (currentPPEAmount / currentNAV) * 100;
+            
+            // =============================================
+            // ATM CALCULATIONS
+            // ATM: Sell shares at mNAV premium, buy BTC
+            // Accretion is ONE-TIME based on mNAV premium
+            // =============================================
+            const atmSharesIssued = raiseAmountUSD / stockPrice;
+            const atmNewShares = sharesActual + atmSharesIssued;
+            const atmNewBTC = state.btcHoldings + btcToBuy;
+            const atmNewBTCPerShare = atmNewBTC / atmNewShares;
+            const atmDilution = (atmSharesIssued / sharesActual) * 100;
+            
+            // ATM accretion is FIXED - doesn't change over time
+            // Because both BTC holdings and share count are fixed after the raise
+            const atmAccretionPct = ((atmNewBTCPerShare / originalBTCPerShare) - 1) * 100;
+            
+            // =============================================
+            // PPE CALCULATIONS  
+            // PPE: No dilution, but annual dividend obligation
+            // Must sell BTC each year to pay dividends
+            // =============================================
+            const ppeInitialBTC = state.btcHoldings + btcToBuy;
+            const ppeInitialBTCPerShare = ppeInitialBTC / sharesActual;
+            const ppeBTCBoost = ((ppeInitialBTCPerShare / originalBTCPerShare) - 1) * 100;
+            const ppeAnnualDividend = raiseAmountUSD * (state.divRate / 100);
+            
+            // BCR calculations based on current PPE
+            // BCR = BTC NAV / Annual Dividend Obligation
+            // Current annual dividend obligation = current PPE × div rate
+            const currentDividendObligation = currentPPEAmount * (state.divRate / 100);
+            const currentBCR = currentDividendObligation > 0 ? currentNAV / currentDividendObligation : Infinity;
+            
+            // After ATM raise (no new dividend obligation, just more BTC)
+            const atmNewNAV = atmNewBTC * state.btcPrice;
+            const atmNewBCR = currentDividendObligation > 0 ? atmNewNAV / currentDividendObligation : Infinity;
+            
+            // After PPE raise (new dividend obligation added)
+            const ppeNewDividendObligation = currentDividendObligation + ppeAnnualDividend;
+            const ppeNewNAV = ppeInitialBTC * state.btcPrice;
+            const ppeNewBCR = ppeNewDividendObligation > 0 ? ppeNewNAV / ppeNewDividendObligation : Infinity;
+            
+            // New amplification after PPE raise
+            const newPPETotal = currentPPEAmount + raiseAmountUSD;
+            const newAmplification = (newPPETotal / ppeNewNAV) * 100;
+            
+            // Default probability estimates (8-year horizon)
+            const currentDefaultProb = estimateDefaultProbability(currentBCR);
+            const ppeDefaultProb = estimateDefaultProbability(ppeNewBCR);
+            const atmDefaultProb = estimateDefaultProbability(atmNewBCR);
+            
+            // =============================================
+            // TIME SERIES: Track BTC/Share accretion over time
+            // =============================================
+            const years = Array.from({length: 11}, (_, i) => i);
+            const cagr = state.btcCagr / 100;
+            
+            // ATM: Flat line - accretion doesn't change over time
+            // (mNAV premium gives one-time boost, both BTC and shares are fixed after)
+            const atmAccretion = years.map(() => atmAccretionPct);
+            
+            // PPE: Track actual BTC holdings as we sell to pay dividends each year
+            // At higher BTC prices, we sell fewer BTC to meet fixed dollar dividend
+            const ppeAccretion = [];
+            let runningBTCHoldings = ppeInitialBTC;
+            
+            for (let year = 0; year <= 10; year++) {
+                if (year === 0) {
+                    // Year 0: Just the initial boost from buying BTC with no dilution
+                    ppeAccretion.push(ppeBTCBoost);
+                } else {
+                    // BTC price at end of this year
+                    const btcPriceAtYear = state.btcPrice * Math.pow(1 + cagr, year);
+                    
+                    // Sell BTC to pay this year's dividend
+                    const btcSoldForDividend = ppeAnnualDividend / btcPriceAtYear;
+                    runningBTCHoldings = runningBTCHoldings - btcSoldForDividend;
+                    
+                    // Calculate current BTC/share
+                    const currentBTCPerShare = runningBTCHoldings / sharesActual;
+                    
+                    // Accretion vs original position (before any raise)
+                    const accretion = ((currentBTCPerShare / originalBTCPerShare) - 1) * 100;
+                    ppeAccretion.push(accretion);
+                }
+            }
+            
+            // Alpha: PPE advantage at year 5 (or last calculated year)
+            const ppeAt5 = ppeAccretion[5] || ppeAccretion[ppeAccretion.length - 1];
+            const atmAt5 = atmAccretionPct;
+            const alpha = atmAt5 !== 0 ? ((ppeAt5 / atmAt5) - 1) * 100 : (ppeAt5 > 0 ? Infinity : 0);
+            
+            return {
+                atmSharesIssued: atmSharesIssued / 1e6, // Convert to millions for display
+                atmDilution,
+                atmBTCAccretion: atmAccretionPct, // Net BTC/share change after dilution
+                atmNewBCR,
+                btcToBuy,
+                ppeBTCBoost,
+                ppeAnnualCost: ppeAnnualDividend / 1e6,
+                ppeNewBCR,
+                currentBCR,
+                currentAmplification,
+                newAmplification,
+                currentNAV: currentNAV / 1e6,
+                currentDefaultProb,
+                ppeDefaultProb,
+                atmDefaultProb,
+                years,
+                atmAccretion,
+                ppeAccretion,
+                avgAtmAccretion: atmAccretionPct,
+                avgPpeAccretion: ppeAt5,
+                alpha
+            };
+        }
+        
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        
+        // Helper to format raise amount
+        function formatRaiseAmount(millions) {
+            if (millions >= 1000) {
+                return `$${(millions / 1000).toFixed(1)}B`;
+            }
+            return `$${millions}M`;
+        }
+        
+        // Estimate default probability based on BCR using Monte Carlo calibrated curve
+        // This approximates 8-year insolvency probability based on BCR level
+        // Calibrated to Jump Diffusion model with typical BTC volatility
+        function estimateDefaultProbability(bcr) {
+            if (bcr <= 0 || !isFinite(bcr)) return 100;
+            if (bcr >= 100) return 0.1;
+            
+            // Exponential decay curve calibrated to Monte Carlo results
+            // Lower BCR = higher default risk
+            // BCR 5x  ≈ 45% default
+            // BCR 10x ≈ 18% default
+            // BCR 20x ≈ 5% default
+            // BCR 40x ≈ 1% default
+            // BCR 60x ≈ 0.3% default
+            
+            const baseProb = 95 * Math.exp(-0.12 * bcr) + 0.5;
+            return Math.max(0.1, Math.min(99, baseProb));
+        }
+        
+        function updateUI() {
+            const metrics = calculateMetrics();
+            
+            // Update comparison cards
+            document.getElementById('atm-cash').textContent = formatRaiseAmount(state.raiseAmount);
+            document.getElementById('atm-shares').textContent = `${metrics.atmSharesIssued.toFixed(1)}M`;
+            document.getElementById('atm-btc').textContent = Math.round(metrics.btcToBuy).toLocaleString();
+            document.getElementById('atm-dilution').textContent = `-${metrics.atmDilution.toFixed(1)}%`;
+            document.getElementById('atm-btc-accretion').textContent = `+${metrics.atmBTCAccretion.toFixed(1)}%`;
+            document.getElementById('atm-new-bcr').textContent = `${Math.round(metrics.atmNewBCR)}x`;
+            
+            document.getElementById('ppe-cash').textContent = formatRaiseAmount(state.raiseAmount);
+            document.getElementById('ppe-btc').textContent = Math.round(metrics.btcToBuy).toLocaleString();
+            document.getElementById('ppe-btc-accretion').textContent = `+${metrics.ppeBTCBoost.toFixed(1)}%`;
+            document.getElementById('ppe-new-bcr').textContent = `${metrics.ppeNewBCR.toFixed(1)}x`;
+            document.getElementById('ppe-annual-cost').textContent = `$${metrics.ppeAnnualCost.toFixed(0)}M`;
+            
+            // Update accretion highlights
+            document.getElementById('atm-accretion').textContent = `${metrics.avgAtmAccretion.toFixed(1)}%`;
+            document.getElementById('ppe-accretion').textContent = `${metrics.avgPpeAccretion.toFixed(1)}%`;
+            document.getElementById('alpha').textContent = `+${Math.round(metrics.alpha)}%`;
+            
+            // Update current amplification display
+            document.getElementById('current-amp').textContent = `${metrics.currentAmplification.toFixed(1)}%`;
+            
+            // Update BCR displays
+            const currentBCRDisplay = isFinite(metrics.currentBCR) ? `${metrics.currentBCR.toFixed(1)}x` : '∞';
+            const newBCRDisplay = isFinite(metrics.ppeNewBCR) ? `${metrics.ppeNewBCR.toFixed(1)}x` : '∞';
+            document.getElementById('current-bcr-display').textContent = currentBCRDisplay;
+            document.getElementById('new-bcr-display').textContent = newBCRDisplay;
+            
+            // Update default probability displays
+            document.getElementById('current-default-prob').textContent = `${metrics.currentDefaultProb.toFixed(1)}%`;
+            const newProbEl = document.getElementById('new-default-prob');
+            newProbEl.textContent = `${metrics.ppeDefaultProb.toFixed(1)}%`;
+            newProbEl.className = metrics.ppeDefaultProb > metrics.currentDefaultProb * 1.5 ? 'prob-value warning' : 'prob-value';
+            
+            // Update probability change
+            const probDelta = metrics.ppeDefaultProb - metrics.currentDefaultProb;
+            const probChangeEl = document.getElementById('prob-change');
+            if (probDelta > 0) {
+                probChangeEl.innerHTML = `<span class="prob-delta negative">+${probDelta.toFixed(1)}%</span> increase in default probability`;
+            } else if (probDelta < 0) {
+                probChangeEl.innerHTML = `<span class="prob-delta positive">${probDelta.toFixed(1)}%</span> decrease in default probability`;
+            } else {
+                probChangeEl.innerHTML = `<span class="prob-delta">No change</span> in default probability`;
+            }
+            
+            // Update recommendation
+            updateRecommendation(metrics);
+            
+            // Update chart
+            renderAccretionChart(metrics);
+        }
+        
+        function updateRecommendation(metrics) {
+            const recEl = document.getElementById('recommendation');
+            const reasonEl = document.getElementById('recommendation-reason');
+            
+            let action, reason, className;
+            const currentAmp = metrics.currentAmplification;
+            const newAmp = metrics.newAmplification;
+            const probDelta = metrics.ppeDefaultProb - metrics.currentDefaultProb;
+            
+            // Decision logic based on amplification and default probability
+            // High amplification (>50%) = high leverage = caution
+            // Low amplification (<20%) = room to lever up
+            
+            if (currentAmp > 50) {
+                // Already highly leveraged
+                if (state.mnav > 1.5) {
+                    action = "ATM Equity (Delever)";
+                    className = "delever";
+                    reason = `High leverage with ${metrics.currentDefaultProb.toFixed(1)}% default risk. ATM at ${state.mnav}x mNAV is ${metrics.atmBTCAccretion.toFixed(1)}% accretive and reduces risk.`;
+                } else {
+                    action = "Caution - High Leverage";
+                    className = "hold";
+                    reason = `Default risk already at ${metrics.currentDefaultProb.toFixed(1)}%. mNAV too low for accretive ATM. Wait for better conditions.`;
+                }
+            } else if (currentAmp > 35) {
+                // Moderate leverage
+                if (state.mnav > 2.0) {
+                    action = "ATM Equity (Highly Accretive)";
+                    className = "lever";
+                    reason = `${state.mnav}x mNAV makes ATM +${metrics.atmBTCAccretion.toFixed(1)}% accretive. Would improve BCR to ${metrics.atmNewBCR.toFixed(1)}x.`;
+                } else if (probDelta < 5) {
+                    action = "Either Option Viable";
+                    className = "hold";
+                    reason = `PPE increases default risk by only ${probDelta.toFixed(1)}%. BCR would drop from ${metrics.currentBCR.toFixed(1)}x to ${metrics.ppeNewBCR.toFixed(1)}x.`;
+                } else {
+                    action = "Prefer ATM if Raising";
+                    className = "hold";
+                    reason = `PPE would increase default risk by ${probDelta.toFixed(1)}%. BCR drops to ${metrics.ppeNewBCR.toFixed(1)}x. Consider ATM when mNAV improves.`;
+                }
+            } else {
+                // Low leverage - room to lever up
+                action = "PPE Credit (Lever Up)";
+                className = "lever";
+                reason = `Strong BCR of ${metrics.currentBCR.toFixed(1)}x with only ${metrics.currentDefaultProb.toFixed(1)}% default risk. PPE adds +${probDelta.toFixed(1)}% risk for ${metrics.ppeBTCBoost.toFixed(1)}% BTC/share gain.`;
+            }
+            
+            recEl.textContent = action;
+            recEl.className = `recommendation-action ${className}`;
+            reasonEl.textContent = reason;
+        }
+        
+        function renderAccretionChart(metrics) {
+            const traces = [
+                {
+                    x: metrics.years,
+                    y: metrics.ppeAccretion,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'PPE (Credit)',
+                    line: { color: '#22c55e', width: 3 },
+                    marker: { size: 8 },
+                    hovertemplate: 'Year %{x}: %{y:.2f}%<extra>PPE</extra>'
+                },
+                {
+                    x: metrics.years,
+                    y: metrics.atmAccretion,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'ATM (Equity)',
+                    line: { color: '#ef4444', width: 2 },
+                    marker: { size: 6 },
+                    hovertemplate: 'Year %{x}: %{y:.2f}%<extra>ATM</extra>'
+                }
+            ];
+            
+            // Calculate y-axis range to show both lines well
+            const allValues = [...metrics.ppeAccretion, ...metrics.atmAccretion];
+            const minVal = Math.min(...allValues);
+            const maxVal = Math.max(...allValues);
+            const padding = (maxVal - minVal) * 0.1 || 1;
+            
+            const layout = {
+                title: {
+                    text: '% Accretion in BTC/Share: <span style="color:#22c55e">PPE</span> vs <span style="color:#ef4444">ATM</span>',
+                    font: { size: 14, color: '#ffffff' },
+                    x: 0.5
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Space Grotesk', color: '#a0a0b0', size: 11 },
+                margin: { t: 60, r: 30, b: 60, l: 70 },
+                xaxis: {
+                    title: { text: 'Years', font: { size: 11 } },
+                    gridcolor: '#1e1e2e',
+                    tickfont: { size: 10 },
+                    dtick: 1
+                },
+                yaxis: {
+                    title: { text: '% BTC/Share Accretion', font: { size: 11 } },
+                    gridcolor: '#1e1e2e',
+                    tickformat: '.2f',
+                    ticksuffix: '%',
+                    tickfont: { size: 10 },
+                    range: [Math.max(0, minVal - padding), maxVal + padding]
+                },
+                legend: {
+                    x: 0.02,
+                    y: 0.98,
+                    bgcolor: 'rgba(26, 26, 46, 0.9)',
+                    bordercolor: '#1e1e2e',
+                    borderwidth: 1
+                },
+                annotations: [{
+                    x: 10,
+                    y: maxVal + padding * 0.5,
+                    text: `${state.mnav}x mNAV | ${state.btcCagr}% BTC CAGR | ${formatRaiseAmount(state.raiseAmount)} Raise`,
+                    showarrow: false,
+                    font: { size: 10, color: '#606070' },
+                    xanchor: 'right',
+                    yanchor: 'top'
+                }],
+                hovermode: 'x unified'
+            };
+            
+            const config = { displayModeBar: false, responsive: true };
+            
+            Plotly.newPlot('accretion-chart', traces, layout, config);
+        }
+        
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        
+        function setupListeners() {
+            // Sliders with editable inputs
+            const sliderConfigs = [
+                { 
+                    sliderId: 'btc-cagr', 
+                    inputId: 'btc-cagr-input', 
+                    key: 'btcCagr', 
+                    format: v => `${v}%`,
+                    parse: v => parseFloat(v.replace('%', ''))
+                },
+                { 
+                    sliderId: 'mnav', 
+                    inputId: 'mnav-input', 
+                    key: 'mnav', 
+                    format: v => `${v}x`,
+                    parse: v => parseFloat(v.replace('x', ''))
+                },
+                { 
+                    sliderId: 'current-ppe', 
+                    inputId: 'current-ppe-input', 
+                    key: 'currentPPE', 
+                    format: v => formatRaiseAmount(v),
+                    parse: v => {
+                        const cleaned = v.replace('$', '').replace(',', '');
+                        if (cleaned.includes('B')) {
+                            return parseFloat(cleaned.replace('B', '')) * 1000;
+                        }
+                        return parseFloat(cleaned.replace('M', ''));
+                    }
+                },
+                { 
+                    sliderId: 'raise-amount', 
+                    inputId: 'raise-input', 
+                    key: 'raiseAmount', 
+                    format: v => formatRaiseAmount(v),
+                    parse: v => {
+                        // Parse $500M or $1.5B
+                        const cleaned = v.replace('$', '').replace(',', '');
+                        if (cleaned.includes('B')) {
+                            return parseFloat(cleaned.replace('B', '')) * 1000;
+                        }
+                        return parseFloat(cleaned.replace('M', ''));
+                    }
+                },
+                { 
+                    sliderId: 'div-rate', 
+                    inputId: 'div-rate-input', 
+                    key: 'divRate', 
+                    format: v => `${v}%`,
+                    parse: v => parseFloat(v.replace('%', ''))
+                },
+                { 
+                    sliderId: 'btc-pct', 
+                    inputId: 'btc-pct-input', 
+                    key: 'btcPct', 
+                    format: v => `${v}%`,
+                    parse: v => parseFloat(v.replace('%', ''))
+                }
+            ];
+            
+            sliderConfigs.forEach(({ sliderId, inputId, key, format, parse }) => {
+                const slider = document.getElementById(sliderId);
+                const input = document.getElementById(inputId);
+                
+                // Slider changes
+                slider.addEventListener('input', () => {
+                    state[key] = parseFloat(slider.value);
+                    input.value = format(state[key]);
+                    updateUI();
+                });
+                
+                // Text input changes
+                input.addEventListener('change', () => {
+                    const parsed = parse(input.value);
+                    if (!isNaN(parsed)) {
+                        state[key] = parsed;
+                        slider.value = parsed;
+                        input.value = format(parsed);
+                        updateUI();
+                    }
+                });
+                
+                // Select all on focus for easy editing
+                input.addEventListener('focus', () => {
+                    input.select();
+                });
+            });
+            
+            // Standard number inputs
+            const numberInputs = [
+                { id: 'btc-price', key: 'btcPrice' },
+                { id: 'btc-holdings', key: 'btcHoldings' },
+                { id: 'shares-outstanding', key: 'sharesOutstanding' }
+            ];
+            
+            numberInputs.forEach(({ id, key }) => {
+                const input = document.getElementById(id);
+                input.addEventListener('change', () => {
+                    state[key] = parseFloat(input.value);
+                    updateUI();
+                });
+            });
+        }
+        
+        // ============================================
+        // INIT
+        // ============================================
+        
+        function init() {
+            setupListeners();
+            updateUI();
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
+

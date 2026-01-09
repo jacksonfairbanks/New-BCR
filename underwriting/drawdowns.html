@@ -223,6 +223,694 @@
             }
         }
         
+        /* ========== STRESS TEST SECTION ========== */
+        .stress-test-controls {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px 25px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        
+        /* Inline stress test (below zoomed chart) */
+        .stress-test-inline {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .stress-test-inline-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-orange);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stress-inline-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        @media (max-width: 800px) {
+            .stress-inline-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+        
+        .implied-bcr-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.05) 100%);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            border-radius: 10px;
+            min-width: 100px;
+        }
+        
+        .implied-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .implied-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent-orange);
+        }
+        
+        .stress-test-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent-orange);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stress-test-title::before {
+            content: '🎯';
+        }
+        
+        .stress-control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .stress-control-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .stress-control-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-orange);
+            min-width: 60px;
+        }
+        
+        .stress-slider {
+            width: 180px;
+            height: 6px;
+            -webkit-appearance: none;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .stress-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(247, 147, 26, 0.4);
+        }
+        
+        .stress-divider {
+            width: 1px;
+            height: 40px;
+            background: var(--border-color);
+        }
+        
+        .implied-params {
+            display: flex;
+            gap: 20px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .implied-params span {
+            color: var(--text-secondary);
+        }
+        
+        /* Stress Test Results Panel */
+        .stress-results-card {
+            background: linear-gradient(135deg, rgba(247, 147, 26, 0.1) 0%, rgba(247, 147, 26, 0.02) 100%);
+            border: 1px solid rgba(247, 147, 26, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 25px;
+        }
+        
+        .stress-results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .stress-results-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-orange);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .survival-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .survival-badge.survived {
+            background: rgba(0, 212, 170, 0.2);
+            color: var(--accent-green);
+            border: 1px solid rgba(0, 212, 170, 0.4);
+        }
+        
+        .survival-badge.failed {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--accent-red);
+            border: 1px solid rgba(255, 71, 87, 0.4);
+        }
+        
+        .stress-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stress-stat {
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stress-stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        
+        .stress-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        
+        .stress-stat-value.green { color: var(--accent-green); }
+        .stress-stat-value.red { color: var(--accent-red); }
+        .stress-stat-value.orange { color: var(--accent-orange); }
+        .stress-stat-value.blue { color: var(--accent-blue); }
+        
+        /* Histogram Section */
+        .histogram-section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .histogram-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .histogram-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .percentile-badge {
+            background: linear-gradient(135deg, var(--accent-orange), #e8850f);
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        #stress-histogram {
+            height: 200px;
+        }
+        
+        .percentile-context {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-orange);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        
+        .percentile-context strong {
+            color: var(--accent-orange);
+        }
+        
+        .percentile-context .highlight {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+        
+        .percentile-context.mini {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 0.75rem;
+        }
+        
+        .dual-histogram-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1000px) {
+            .dual-histogram-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .comparison-insight {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .comparison-insight-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .comparison-insight-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        /* Model Comparison Styles */
+        .model-comparison-header {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .model-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .model-label.bootstrap { color: #a855f7; }
+        .model-label.jump { color: #f97316; }
+        
+        .model-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .regime-tag {
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .model-section {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .bootstrap-section {
+            border-left: 3px solid #a855f7;
+        }
+        
+        .jump-section {
+            border-left: 3px solid #f97316;
+        }
+        
+        .model-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .bootstrap-section .model-section-title { color: #a855f7; }
+        .jump-section .model-section-title { color: #f97316; }
+        
+        .model-icon {
+            font-size: 1rem;
+        }
+        
+        .model-info {
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+        
+        .model-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+        
+        .model-summary-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .model-summary-card.bootstrap {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        
+        .model-summary-card.jump {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.05) 100%);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+        
+        .model-summary-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        
+        .model-summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .model-summary-card.bootstrap .model-summary-value { color: #a855f7; }
+        .model-summary-card.jump .model-summary-value { color: #f97316; }
+        
+        .model-summary-subtext {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+        
+        /* Regime Comparison Grid */
+        .regime-comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 900px) {
+            .regime-comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .regime-section {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .current-regime {
+            border-left: 3px solid #a855f7;
+        }
+        
+        .bear-regime {
+            border-left: 3px solid #ef4444;
+        }
+        
+        .regime-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .regime-icon {
+            font-size: 1.1rem;
+        }
+        
+        .regime-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .current-regime .regime-name { color: #a855f7; }
+        .bear-regime .regime-name { color: #ef4444; }
+        
+        .regime-dates {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+        
+        .regime-models {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .mini-model {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .mini-model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .mini-model-header .percentile-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+        }
+        
+        .regime-summary {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .regime-avg-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .regime-avg-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        
+        .current-regime .regime-avg-value { color: #a855f7; }
+        .bear-regime .regime-avg-value { color: #ef4444; }
+        .full-regime .regime-avg-value { color: #fbbf24; }
+        
+        .regime-comparison-grid.three-col {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        @media (max-width: 1000px) {
+            .regime-comparison-grid.three-col {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .full-regime {
+            border-left: 3px solid #fbbf24;
+        }
+        
+        .full-regime .regime-name { color: #fbbf24; }
+        
+        .regime-models.stacked {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        /* Best Fit Card */
+        .best-fit-card {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.02) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .best-fit-header {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #22c55e;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .best-fit-content {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .best-fit-content strong {
+            color: #22c55e;
+        }
+        
+        .best-fit-content .regime-winner {
+            display: inline-block;
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        /* Historical Rarity Card */
+        .historical-rarity-card {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, rgba(251, 191, 36, 0.02) 100%);
+            border: 1px solid rgba(251, 191, 36, 0.25);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .rarity-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+        }
+        
+        .rarity-icon {
+            font-size: 1.2rem;
+        }
+        
+        .rarity-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fbbf24;
+        }
+        
+        .rarity-content {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 700px) {
+            .rarity-content {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+        
+        .rarity-stat {
+            text-align: center;
+        }
+        
+        .rarity-stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        
+        .rarity-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fbbf24;
+        }
+        
+        .rarity-stat-sublabel {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        .rarity-validation {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        
+        .rarity-validation strong {
+            color: #fbbf24;
+        }
+        
+        .rarity-validation .match {
+            color: #22c55e;
+            font-weight: 600;
+        }
+        
+        .rarity-validation .mismatch {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        
         /* Drawdown selector cards */
         .drawdown-selector {
             display: grid;
@@ -480,6 +1168,58 @@
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+        
+        .narrative-title.collapsible-header {
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            padding: 8px 12px;
+            margin: -8px -12px 10px -12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .narrative-title.collapsible-header:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .expand-hint {
+            margin-left: auto;
+            font-size: 0.65rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        
+        .collapse-chevron {
+            font-size: 0.9rem;
+            transition: transform 0.3s ease;
+            color: var(--text-muted);
+            margin-left: 6px;
+        }
+        
+        .collapse-chevron.expanded {
+            transform: rotate(90deg);
+        }
+        
+        .collapsible-content {
+            overflow: hidden;
+            max-height: 500px;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+        
+        .collapsible-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-bottom: 0;
         }
         
         .narrative-text {
@@ -816,6 +1556,32 @@
                         Zoomed Price Action
                     </div>
                     <div id="zoom-chart"></div>
+                    
+                    <!-- Stress Test Controls - Positioned below chart -->
+                    <div class="stress-test-inline">
+                        <div class="stress-test-inline-title">
+                            <span>🎯</span> Stress Test Your Position
+                        </div>
+                        
+                        <div class="stress-inline-grid">
+                            <div class="stress-control-group">
+                                <span class="stress-control-label">Amplification</span>
+                                <input type="range" class="stress-slider" id="stress-amp" min="5" max="100" value="25" step="1">
+                                <span class="stress-control-value" id="stress-amp-value">25%</span>
+                            </div>
+                            
+                            <div class="stress-control-group">
+                                <span class="stress-control-label">Dividend Rate</span>
+                                <input type="range" class="stress-slider" id="stress-div-rate" min="1" max="25" value="10" step="0.5">
+                                <span class="stress-control-value" id="stress-div-value">10%</span>
+                            </div>
+                            
+                            <div class="implied-bcr-display">
+                                <span class="implied-label">Implied BCR</span>
+                                <span class="implied-value" id="implied-bcr">40.0x</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="chart-card">
@@ -829,10 +1595,12 @@
                     </div>
 
                     <div class="narrative-section">
-                        <div class="narrative-title">
+                        <div class="narrative-title collapsible-header" onclick="toggleTimeline()">
                             <span>📅</span> Event Timeline
+                            <span class="expand-hint" id="timeline-hint">Show</span>
+                            <span class="collapse-chevron" id="timeline-collapse-icon">›</span>
                         </div>
-                        <div class="timeline" id="event-timeline">
+                        <div class="timeline collapsible-content collapsed" id="event-timeline">
                             <!-- Timeline items populated by JS -->
                         </div>
                     </div>
@@ -843,6 +1611,174 @@
                             <!-- Populated by JS -->
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Stress Test Results -->
+            <div class="stress-results-card" id="stress-results">
+                <div class="stress-results-header">
+                    <div class="stress-results-title">
+                        <span>🎯</span> Your Position vs This Drawdown
+                    </div>
+                    <div class="survival-badge survived" id="survival-badge">✓ SURVIVED</div>
+                </div>
+                
+                <div class="stress-stats-grid">
+                    <div class="stress-stat">
+                        <div class="stress-stat-label">Starting BCR</div>
+                        <div class="stress-stat-value orange" id="stress-start-bcr">40.0x</div>
+                    </div>
+                    <div class="stress-stat">
+                        <div class="stress-stat-label">Minimum BCR</div>
+                        <div class="stress-stat-value" id="stress-min-bcr">12.4x</div>
+                    </div>
+                    <div class="stress-stat">
+                        <div class="stress-stat-label">Ending BCR</div>
+                        <div class="stress-stat-value" id="stress-end-bcr">28.7x</div>
+                    </div>
+                    <div class="stress-stat">
+                        <div class="stress-stat-label">BTC Sold</div>
+                        <div class="stress-stat-value blue" id="stress-btc-sold">18.3%</div>
+                    </div>
+                </div>
+                
+                <!-- Regime Comparison Grid -->
+                <div class="regime-comparison-grid three-col">
+                    <!-- CURRENT REGIME (2021-2025) -->
+                    <div class="regime-section current-regime">
+                        <div class="regime-header">
+                            <span class="regime-icon">📈</span>
+                            <span class="regime-name">Current</span>
+                            <span class="regime-dates">(2021-2025)</span>
+                        </div>
+                        
+                        <div class="regime-models stacked">
+                            <div class="mini-model">
+                                <div class="mini-model-header">
+                                    <span>📊 Bootstrap</span>
+                                    <span class="percentile-badge" id="current-bs-badge">—%</span>
+                                </div>
+                                <div id="current-bs-histogram" style="height: 80px;"></div>
+                            </div>
+                            <div class="mini-model">
+                                <div class="mini-model-header">
+                                    <span>⚡ Jump Diff</span>
+                                    <span class="percentile-badge" id="current-jd-badge">—%</span>
+                                </div>
+                                <div id="current-jd-histogram" style="height: 80px;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="regime-summary">
+                            <span class="regime-avg-label">Avg:</span>
+                            <span class="regime-avg-value" id="current-avg">—%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- BEAR REGIME (2018-2020) -->
+                    <div class="regime-section bear-regime">
+                        <div class="regime-header">
+                            <span class="regime-icon">🐻</span>
+                            <span class="regime-name">Bear</span>
+                            <span class="regime-dates">(2018-2020)</span>
+                        </div>
+                        
+                        <div class="regime-models stacked">
+                            <div class="mini-model">
+                                <div class="mini-model-header">
+                                    <span>📊 Bootstrap</span>
+                                    <span class="percentile-badge" id="bear-bs-badge">—%</span>
+                                </div>
+                                <div id="bear-bs-histogram" style="height: 80px;"></div>
+                            </div>
+                            <div class="mini-model">
+                                <div class="mini-model-header">
+                                    <span>⚡ Jump Diff</span>
+                                    <span class="percentile-badge" id="bear-jd-badge">—%</span>
+                                </div>
+                                <div id="bear-jd-histogram" style="height: 80px;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="regime-summary">
+                            <span class="regime-avg-label">Avg:</span>
+                            <span class="regime-avg-value" id="bear-avg">—%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- FULL CYCLE (2014-2025) -->
+                    <div class="regime-section full-regime">
+                        <div class="regime-header">
+                            <span class="regime-icon">🔄</span>
+                            <span class="regime-name">Full Cycle</span>
+                            <span class="regime-dates">(2014-2025)</span>
+                        </div>
+                        
+                        <div class="regime-models stacked">
+                            <div class="mini-model">
+                                <div class="mini-model-header">
+                                    <span>📊 Bootstrap</span>
+                                    <span class="percentile-badge" id="full-bs-badge">—%</span>
+                                </div>
+                                <div id="full-bs-histogram" style="height: 80px;"></div>
+                            </div>
+                            <div class="mini-model">
+                                <div class="mini-model-header">
+                                    <span>⚡ Jump Diff</span>
+                                    <span class="percentile-badge" id="full-jd-badge">—%</span>
+                                </div>
+                                <div id="full-jd-histogram" style="height: 80px;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="regime-summary">
+                            <span class="regime-avg-label">Avg:</span>
+                            <span class="regime-avg-value" id="full-avg">—%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Best Fit Indicator -->
+                <div class="best-fit-card" id="best-fit-card">
+                    <div class="best-fit-header">
+                        <span>🎯</span> Best Historical Fit
+                    </div>
+                    <div class="best-fit-content" id="best-fit-content">
+                        Calculating...
+                    </div>
+                </div>
+                
+                <!-- Historical Rarity Card -->
+                <div class="historical-rarity-card" id="historical-rarity">
+                    <div class="rarity-header">
+                        <span class="rarity-icon">📜</span>
+                        <span class="rarity-title">Historical Rarity</span>
+                    </div>
+                    <div class="rarity-content">
+                        <div class="rarity-stat">
+                            <div class="rarity-stat-label">Crashes ≥ This Severity</div>
+                            <div class="rarity-stat-value" id="rarity-count">—</div>
+                            <div class="rarity-stat-sublabel">in <span id="rarity-years">—</span> years of BTC history</div>
+                        </div>
+                        <div class="rarity-stat">
+                            <div class="rarity-stat-label">Historical Frequency</div>
+                            <div class="rarity-stat-value" id="rarity-frequency">—</div>
+                            <div class="rarity-stat-sublabel">annual probability</div>
+                        </div>
+                        <div class="rarity-stat">
+                            <div class="rarity-stat-label">Expected in 8-Year Horizon</div>
+                            <div class="rarity-stat-value" id="rarity-expected">—</div>
+                            <div class="rarity-stat-sublabel">crash events</div>
+                        </div>
+                    </div>
+                    <div class="rarity-validation" id="rarity-validation">
+                        Loading validation...
+                    </div>
+                </div>
+                
+                <!-- Summary Comparison -->
+                <div class="percentile-context" id="percentile-context" style="margin-top: 15px;">
+                    Loading analysis...
                 </div>
             </div>
         </div>
@@ -1137,6 +2073,17 @@
                 zone.el.style.height = chartHeight + 'px';
             });
         }
+        
+        // Toggle timeline collapse
+        function toggleTimeline() {
+            const content = document.getElementById('event-timeline');
+            const icon = document.getElementById('timeline-collapse-icon');
+            const hint = document.getElementById('timeline-hint');
+            
+            const isCollapsed = content.classList.toggle('collapsed');
+            icon.classList.toggle('expanded', !isCollapsed);
+            hint.textContent = isCollapsed ? 'Show' : 'Hide';
+        }
 
         function selectDrawdown(year) {
             selectedEvent = DRAWDOWN_EVENTS[year];
@@ -1285,6 +2232,773 @@
             // Scroll back to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        
+        // ========================================
+        // STRESS TEST FUNCTIONALITY
+        // ========================================
+        
+        // Setup stress test controls
+        function initStressTestControls() {
+            const ampSlider = document.getElementById('stress-amp');
+            const ampValue = document.getElementById('stress-amp-value');
+            const divSlider = document.getElementById('stress-div-rate');
+            const divValue = document.getElementById('stress-div-value');
+            const impliedBcr = document.getElementById('implied-bcr');
+            
+            function updateImpliedBCR() {
+                const amp = parseFloat(ampSlider.value) / 100; // Convert % to decimal
+                const divRate = parseFloat(divSlider.value) / 100;
+                
+                // BCR = 1 / (Amplification × DivRate)
+                const bcr = 1 / (amp * divRate);
+                impliedBcr.textContent = bcr.toFixed(1) + 'x';
+                
+                // If a drawdown is selected, update the stress test
+                if (selectedEvent) {
+                    runStressTest(selectedEvent);
+                }
+            }
+            
+            ampSlider.addEventListener('input', () => {
+                ampValue.textContent = ampSlider.value + '%';
+                updateImpliedBCR();
+            });
+            
+            divSlider.addEventListener('input', () => {
+                divValue.textContent = divSlider.value + '%';
+                updateImpliedBCR();
+            });
+            
+            // Initial calculation
+            updateImpliedBCR();
+        }
+        
+        // Run stress test for a specific drawdown
+        function runStressTest(event) {
+            const amp = parseFloat(document.getElementById('stress-amp').value) / 100; // Convert % to decimal
+            const divRate = parseFloat(document.getElementById('stress-div-rate').value) / 100;
+            
+            // Calculate BCR from amplification: BCR = 1 / (Amp × DivRate)
+            const targetBCR = 1 / (amp * divRate);
+            
+            // Get price data for this drawdown period
+            const startDate = event.peakDate;
+            const endDate = event.troughDate;
+            
+            const priceData = window.BTC_PRICES.filter(d => {
+                return d.date >= startDate && d.date <= endDate;
+            });
+            
+            if (priceData.length < 10) {
+                console.error('Not enough price data for stress test');
+                return;
+            }
+            
+            // === VERIFICATION LOGGING ===
+            console.log('=== STRESS TEST VERIFICATION ===');
+            console.log(`Event: ${event.name}`);
+            console.log(`Duration: ${priceData.length} days`);
+            console.log(`Start Price: $${priceData[0].price.toLocaleString()}`);
+            console.log(`End Price: $${priceData[priceData.length-1].price.toLocaleString()}`);
+            console.log(`Target BCR: ${targetBCR}x, Div Rate: ${(divRate*100).toFixed(1)}%`);
+            
+            // Simulate treasury through this period
+            const result = simulateTreasury(priceData, targetBCR, divRate);
+            
+            console.log(`--- Historical Result ---`);
+            console.log(`Max Drawdown: ${result.maxDrawdown.toFixed(1)}%`);
+            console.log(`Min BCR: ${result.minBCR.toFixed(2)}x`);
+            console.log(`End BCR: ${result.endBCR.toFixed(2)}x`);
+            console.log(`BTC Sold: ${result.btcSoldPct.toFixed(2)}%`);
+            console.log(`Survived: ${result.survived}`);
+            
+            // Run ALL models for comparison (3 regimes × 2 models = 6 total)
+            console.log(`\n--- Running Models (${priceData.length} day horizon) ---`);
+            
+            // Current Regime (2021-2025)
+            const currentBootstrap = runBlockBootstrap(priceData.length, divRate, targetBCR, 1000, 'current');
+            const currentJump = runJumpDiffusion(priceData.length, divRate, targetBCR, 1000, 'current');
+            
+            // Bear Regime (2018-2020)
+            const bearBootstrap = runBlockBootstrap(priceData.length, divRate, targetBCR, 1000, 'bear');
+            const bearJump = runJumpDiffusion(priceData.length, divRate, targetBCR, 1000, 'bear');
+            
+            // Full Cycle (2014-2025)
+            const fullBootstrap = runBlockBootstrap(priceData.length, divRate, targetBCR, 1000, 'full');
+            const fullJump = runJumpDiffusion(priceData.length, divRate, targetBCR, 1000, 'full');
+            
+            // Calculate percentiles for all models
+            const currentBsBcr = calculatePercentile(currentBootstrap.minBCRs, result.minBCR);
+            const currentJdBcr = calculatePercentile(currentJump.minBCRs, result.minBCR);
+            
+            const bearBsBcr = calculatePercentile(bearBootstrap.minBCRs, result.minBCR);
+            const bearJdBcr = calculatePercentile(bearJump.minBCRs, result.minBCR);
+            
+            const fullBsBcr = calculatePercentile(fullBootstrap.minBCRs, result.minBCR);
+            const fullJdBcr = calculatePercentile(fullJump.minBCRs, result.minBCR);
+            
+            console.log(`\n--- CURRENT REGIME (2021-2025) ---`);
+            console.log(`Block Bootstrap: BCR ${currentBsBcr.toFixed(0)}%ile`);
+            console.log(`Jump Diffusion: BCR ${currentJdBcr.toFixed(0)}%ile`);
+            
+            console.log(`\n--- BEAR REGIME (2018-2020) ---`);
+            console.log(`Block Bootstrap: BCR ${bearBsBcr.toFixed(0)}%ile`);
+            console.log(`Jump Diffusion: BCR ${bearJdBcr.toFixed(0)}%ile`);
+            
+            console.log(`\n--- FULL CYCLE (2014-2025) ---`);
+            console.log(`Block Bootstrap: BCR ${fullBsBcr.toFixed(0)}%ile`);
+            console.log(`Jump Diffusion: BCR ${fullJdBcr.toFixed(0)}%ile`);
+            console.log('================================');
+            
+            // Update UI with all model comparisons
+            updateStressTestUI(result, {
+                current: {
+                    bootstrap: { bcr: currentBsBcr, data: currentBootstrap },
+                    jump: { bcr: currentJdBcr, data: currentJump }
+                },
+                bear: {
+                    bootstrap: { bcr: bearBsBcr, data: bearBootstrap },
+                    jump: { bcr: bearJdBcr, data: bearJump }
+                },
+                full: {
+                    bootstrap: { bcr: fullBsBcr, data: fullBootstrap },
+                    jump: { bcr: fullJdBcr, data: fullJump }
+                }
+            }, event);
+        }
+        
+        // Simulate treasury through historical period
+        function simulateTreasury(priceData, targetBCR, divRate) {
+            const startPrice = priceData[0].price;
+            const monthlyDivRate = divRate / 12;
+            
+            // Start with 1 BTC, BCR determines initial capital structure
+            let btcHoldings = 1;
+            const initialNav = btcHoldings * startPrice;
+            const annualDividend = initialNav / targetBCR;
+            const monthlyDividend = annualDividend / 12;
+            
+            let minBCR = targetBCR;
+            let totalBtcSold = 0;
+            let failed = false;
+            let currentBCR = targetBCR;
+            
+            // Simulate day by day
+            let daysSinceLastDiv = 0;
+            
+            for (let i = 1; i < priceData.length; i++) {
+                const price = priceData[i].price;
+                daysSinceLastDiv++;
+                
+                // Pay dividend monthly (every ~30 days)
+                if (daysSinceLastDiv >= 30) {
+                    const btcToSell = monthlyDividend / price;
+                    btcHoldings -= btcToSell;
+                    totalBtcSold += btcToSell;
+                    daysSinceLastDiv = 0;
+                    
+                    if (btcHoldings <= 0) {
+                        failed = true;
+                        break;
+                    }
+                }
+                
+                // Calculate current BCR
+                const currentNav = btcHoldings * price;
+                currentBCR = currentNav / annualDividend;
+                
+                if (currentBCR < minBCR) {
+                    minBCR = currentBCR;
+                }
+                
+                if (currentBCR < 1) {
+                    failed = true;
+                    break;
+                }
+            }
+            
+            const endPrice = priceData[priceData.length - 1].price;
+            const endNav = btcHoldings * endPrice;
+            const endBCR = endNav / annualDividend;
+            
+            // Calculate max drawdown from price data
+            let peak = priceData[0].price;
+            let maxDrawdown = 0;
+            for (let i = 1; i < priceData.length; i++) {
+                if (priceData[i].price > peak) peak = priceData[i].price;
+                const dd = (peak - priceData[i].price) / peak * 100;
+                if (dd > maxDrawdown) maxDrawdown = dd;
+            }
+            
+            return {
+                startBCR: targetBCR,
+                minBCR: minBCR,
+                endBCR: failed ? 0 : endBCR,
+                btcSoldPct: totalBtcSold * 100,
+                survived: !failed,
+                maxDrawdown: maxDrawdown
+            };
+        }
+        
+        // ========================================
+        // REGIME DEFINITIONS
+        // ========================================
+        const REGIMES = {
+            current: { name: 'Current (2021-2025)', start: '2021-01-01', end: '2025-12-31', color: '#a855f7' },
+            bear: { name: 'Bear (2018-2020)', start: '2018-01-01', end: '2020-12-31', color: '#ef4444' },
+            full: { name: 'Full Cycle (2014-2025)', start: '2014-01-01', end: '2025-12-31', color: '#fbbf24' }
+        };
+        
+        // ========================================
+        // BLOCK BOOTSTRAP - Configurable Regime
+        // ========================================
+        function runBlockBootstrap(horizonDays, divRate, targetBCR, nSims, regime = 'current') {
+            const regimeConfig = REGIMES[regime];
+            const REGIME_START = regimeConfig.start;
+            const REGIME_END = regimeConfig.end;
+            
+            const allData = window.BTC_PRICES;
+            const regimeData = allData.filter(d => d.date >= REGIME_START && d.date <= REGIME_END);
+            
+            // Calculate returns from regime data only
+            const returns = [];
+            for (let i = 1; i < regimeData.length; i++) {
+                if (regimeData[i].price > 0 && regimeData[i-1].price > 0) {
+                    returns.push(Math.log(regimeData[i].price / regimeData[i-1].price));
+                }
+            }
+            
+            console.log(`[Block Bootstrap] Using ${returns.length} days from ${regimeConfig.name}`);
+            
+            const blockSize = 21; // ~1 month blocks
+            const minBCRs = [];
+            const maxDrawdowns = [];
+            
+            for (let sim = 0; sim < nSims; sim++) {
+                // Generate price path using block bootstrap
+                const pricePath = [100]; // Start at normalized price
+                let remaining = horizonDays;
+                
+                while (remaining > 0) {
+                    // Random block start from REGIME data only
+                    const blockStart = Math.floor(Math.random() * Math.max(1, returns.length - blockSize));
+                    const blockLen = Math.min(blockSize, remaining);
+                    
+                    for (let j = 0; j < blockLen && (blockStart + j) < returns.length; j++) {
+                        const ret = returns[blockStart + j];
+                        const newPrice = pricePath[pricePath.length - 1] * Math.exp(ret);
+                        pricePath.push(newPrice);
+                    }
+                    remaining -= blockLen;
+                }
+                
+                // Calculate max drawdown and min BCR
+                const result = simulatePath(pricePath, targetBCR);
+                maxDrawdowns.push(result.maxDrawdown);
+                minBCRs.push(result.minBCR);
+            }
+            
+            return {
+                model: `Block Bootstrap ${regimeConfig.name}`,
+                regime: regime,
+                minBCRs: minBCRs.sort((a, b) => a - b),
+                maxDrawdowns: maxDrawdowns.sort((a, b) => a - b)
+            };
+        }
+
+        // ========================================
+        // JUMP DIFFUSION (Merton Model) - Configurable Regime
+        // ========================================
+        function runJumpDiffusion(horizonDays, divRate, targetBCR, nSims, regime = 'current') {
+            const regimeConfig = REGIMES[regime];
+            const REGIME_START = regimeConfig.start;
+            const REGIME_END = regimeConfig.end;
+            
+            const allData = window.BTC_PRICES;
+            const regimeData = allData.filter(d => d.date >= REGIME_START && d.date <= REGIME_END);
+            
+            // Calculate daily log returns
+            const returns = [];
+            for (let i = 1; i < regimeData.length; i++) {
+                if (regimeData[i].price > 0 && regimeData[i-1].price > 0) {
+                    returns.push(Math.log(regimeData[i].price / regimeData[i-1].price));
+                }
+            }
+            
+            // Calibrate parameters from regime data
+            const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+            const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
+            const dailyVol = Math.sqrt(variance);
+            
+            // Identify jumps (returns > 2 std devs)
+            const jumpThreshold = 2 * dailyVol;
+            const jumps = returns.filter(r => Math.abs(r) > jumpThreshold);
+            const nonJumps = returns.filter(r => Math.abs(r) <= jumpThreshold);
+            
+            // Jump parameters
+            const lambda = jumps.length / returns.length; // Daily jump probability
+            const jumpMean = jumps.length > 0 ? jumps.reduce((a, b) => a + b, 0) / jumps.length : -0.05;
+            const jumpStd = jumps.length > 1 ? Math.sqrt(jumps.reduce((a, b) => a + Math.pow(b - jumpMean, 2), 0) / jumps.length) : 0.10;
+            
+            // Diffusion parameters (from non-jump returns)
+            const diffMean = nonJumps.length > 0 ? nonJumps.reduce((a, b) => a + b, 0) / nonJumps.length : mean;
+            const diffVar = nonJumps.length > 0 ? nonJumps.reduce((a, b) => a + Math.pow(b - diffMean, 2), 0) / nonJumps.length : variance;
+            const sigma = Math.sqrt(diffVar);
+            
+            // Drift adjusted for jumps
+            const mu = diffMean - lambda * jumpMean;
+            
+            console.log(`[Jump Diffusion] Calibrated from ${regimeConfig.name}:`);
+            console.log(`  Daily vol (σ): ${(sigma * 100).toFixed(2)}%`);
+            console.log(`  Jump prob (λ): ${(lambda * 100).toFixed(2)}%/day`);
+            console.log(`  Jump mean: ${(jumpMean * 100).toFixed(2)}%`);
+            console.log(`  Jump std: ${(jumpStd * 100).toFixed(2)}%`);
+            
+            const minBCRs = [];
+            const maxDrawdowns = [];
+            
+            // Box-Muller for normal random
+            function randn() {
+                let u = 0, v = 0;
+                while (u === 0) u = Math.random();
+                while (v === 0) v = Math.random();
+                return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+            }
+            
+            for (let sim = 0; sim < nSims; sim++) {
+                const pricePath = [100];
+                
+                for (let day = 0; day < horizonDays; day++) {
+                    const prevPrice = pricePath[pricePath.length - 1];
+                    
+                    // Diffusion component
+                    const diffusion = mu + sigma * randn();
+                    
+                    // Jump component (Poisson process)
+                    let jump = 0;
+                    if (Math.random() < lambda) {
+                        jump = jumpMean + jumpStd * randn();
+                    }
+                    
+                    const dailyReturn = diffusion + jump;
+                    const newPrice = prevPrice * Math.exp(dailyReturn);
+                    pricePath.push(Math.max(0.01, newPrice)); // Floor at near-zero
+                }
+                
+                // Calculate max drawdown and min BCR
+                const result = simulatePath(pricePath, targetBCR);
+                maxDrawdowns.push(result.maxDrawdown);
+                minBCRs.push(result.minBCR);
+            }
+            
+            return {
+                model: `Jump Diffusion ${regimeConfig.name}`,
+                regime: regime,
+                minBCRs: minBCRs.sort((a, b) => a - b),
+                maxDrawdowns: maxDrawdowns.sort((a, b) => a - b)
+            };
+        }
+        
+        // ========================================
+        // Shared: Simulate path and extract metrics
+        // ========================================
+        function simulatePath(pricePath, targetBCR) {
+            // Calculate max drawdown
+            let peak = pricePath[0];
+            let maxDD = 0;
+            for (let i = 1; i < pricePath.length; i++) {
+                if (pricePath[i] > peak) peak = pricePath[i];
+                const dd = (peak - pricePath[i]) / peak * 100;
+                if (dd > maxDD) maxDD = dd;
+            }
+            
+            // Simulate treasury BCR
+            let btc = 1;
+            const initialNav = btc * pricePath[0];
+            const annualDiv = initialNav / targetBCR;
+            const monthlyDiv = annualDiv / 12;
+            let minBCR = targetBCR;
+            let daysSinceDiv = 0;
+            
+            for (let i = 1; i < pricePath.length; i++) {
+                daysSinceDiv++;
+                if (daysSinceDiv >= 30) {
+                    btc -= monthlyDiv / pricePath[i];
+                    daysSinceDiv = 0;
+                    if (btc <= 0) {
+                        minBCR = 0;
+                        break;
+                    }
+                }
+                
+                const nav = btc * pricePath[i];
+                const bcr = nav / annualDiv;
+                if (bcr < minBCR) minBCR = bcr;
+                if (bcr < 1) {
+                    minBCR = Math.min(minBCR, bcr);
+                    break;
+                }
+            }
+            
+            return {
+                maxDrawdown: maxDD,
+                minBCR: Math.max(0, minBCR)
+            };
+        }
+        
+        // Calculate percentile
+        function calculatePercentile(sortedArray, value) {
+            let count = 0;
+            for (let i = 0; i < sortedArray.length; i++) {
+                if (sortedArray[i] < value) count++;
+                else break;
+            }
+            return (count / sortedArray.length) * 100;
+        }
+        
+        // ========================================
+        // HISTORICAL RARITY CALCULATION
+        // ========================================
+        // Major drawdown events with their severities
+        const HISTORICAL_CRASHES = [
+            { year: 2011, maxDD: 93, duration: 163 },  // Early crash
+            { year: 2014, maxDD: 86, duration: 411 },  // Mt. Gox
+            { year: 2018, maxDD: 84, duration: 364 },  // ICO Bubble
+            { year: 2022, maxDD: 77, duration: 394 },  // Fed/Contagion
+        ];
+        
+        const BTC_HISTORY_START = 2011; // First major trading
+        const CURRENT_YEAR = new Date().getFullYear();
+        const YEARS_OF_HISTORY = CURRENT_YEAR - BTC_HISTORY_START;
+        
+        function calculateHistoricalRarity(drawdownSeverity) {
+            // Count how many historical crashes were at least this severe
+            const crashesThisSevere = HISTORICAL_CRASHES.filter(c => c.maxDD >= Math.abs(drawdownSeverity));
+            const count = crashesThisSevere.length;
+            
+            // Calculate annual probability
+            const annualProb = count / YEARS_OF_HISTORY;
+            
+            // Expected crashes in 8-year horizon
+            const expected8Year = annualProb * 8;
+            
+            return {
+                count: count,
+                yearsOfHistory: YEARS_OF_HISTORY,
+                annualProbability: annualProb * 100, // as percentage
+                expected8Year: expected8Year,
+                crashes: crashesThisSevere
+            };
+        }
+        
+        function updateHistoricalRarity(event, mcAvgPct) {
+            const rarity = calculateHistoricalRarity(event.maxDrawdown);
+            
+            // Update display
+            document.getElementById('rarity-count').textContent = rarity.count;
+            document.getElementById('rarity-years').textContent = rarity.yearsOfHistory;
+            document.getElementById('rarity-frequency').textContent = rarity.annualProbability.toFixed(1) + '%';
+            document.getElementById('rarity-expected').textContent = rarity.expected8Year.toFixed(1);
+            
+            // Calculate what MC says vs historical frequency
+            // MC percentile = % of paths that are worse
+            // If MC says 5% of 8-year paths hit this severity, that implies ~0.6% annual
+            const mcImpliedAnnual = mcAvgPct / 8; // rough approximation
+            
+            // Comparison ratio
+            const ratio = rarity.annualProbability / Math.max(mcImpliedAnnual, 0.1);
+            
+            let validationHTML = '';
+            
+            if (ratio > 5) {
+                // MC severely underestimates
+                validationHTML = `
+                    <strong>Model Validation:</strong> Historical data shows <strong>${rarity.annualProbability.toFixed(1)}%</strong> annual probability of crashes ≥${Math.abs(event.maxDrawdown).toFixed(0)}%. 
+                    Monte Carlo implies ~<strong>${mcImpliedAnnual.toFixed(1)}%</strong> annual probability.
+                    <br><br>
+                    <span class="mismatch">⚠️ MC underestimates frequency by ~${ratio.toFixed(0)}x.</span> 
+                    Historical crashes of this severity occur <strong>1 every ${(1/rarity.annualProbability * 100).toFixed(1)} years</strong> on average.
+                `;
+            } else if (ratio > 2) {
+                // MC moderately underestimates
+                validationHTML = `
+                    <strong>Model Validation:</strong> Historical: <strong>${rarity.annualProbability.toFixed(1)}%</strong>/year vs MC implied: <strong>${mcImpliedAnnual.toFixed(1)}%</strong>/year.
+                    <br><br>
+                    <span style="color: #fbbf24;">⚠️ MC may underestimate by ~${ratio.toFixed(1)}x.</span> 
+                    Consider this when setting BCR buffers.
+                `;
+            } else if (ratio >= 0.5) {
+                // Reasonable match
+                validationHTML = `
+                    <strong>Model Validation:</strong> Historical: <strong>${rarity.annualProbability.toFixed(1)}%</strong>/year. MC implied: <strong>${mcImpliedAnnual.toFixed(1)}%</strong>/year.
+                    <br><br>
+                    <span class="match">✓ MC frequency roughly aligns with historical occurrence.</span> 
+                    Model appears reasonably calibrated for this severity level.
+                `;
+            } else {
+                // MC overestimates (unusual)
+                validationHTML = `
+                    <strong>Model Validation:</strong> Historical: <strong>${rarity.annualProbability.toFixed(1)}%</strong>/year. MC implied: <strong>${mcImpliedAnnual.toFixed(1)}%</strong>/year.
+                    <br><br>
+                    <span class="match">MC may be conservative</span> — producing more severe scenarios than historical frequency suggests.
+                `;
+            }
+            
+            document.getElementById('rarity-validation').innerHTML = validationHTML;
+        }
+        
+        // Update stress test UI with both regime comparisons
+        function updateStressTestUI(result, models, event) {
+            // Update stats
+            document.getElementById('stress-start-bcr').textContent = result.startBCR.toFixed(1) + 'x';
+            
+            const minBcrEl = document.getElementById('stress-min-bcr');
+            minBcrEl.textContent = result.minBCR.toFixed(1) + 'x';
+            minBcrEl.className = 'stress-stat-value ' + (result.minBCR < 5 ? 'red' : result.minBCR < 15 ? 'orange' : 'green');
+            
+            const endBcrEl = document.getElementById('stress-end-bcr');
+            endBcrEl.textContent = result.survived ? result.endBCR.toFixed(1) + 'x' : 'FAILED';
+            endBcrEl.className = 'stress-stat-value ' + (result.survived ? 'green' : 'red');
+            
+            document.getElementById('stress-btc-sold').textContent = result.btcSoldPct.toFixed(1) + '%';
+            
+            // Update survival badge
+            const badge = document.getElementById('survival-badge');
+            if (result.survived) {
+                badge.textContent = '✓ SURVIVED';
+                badge.className = 'survival-badge survived';
+            } else {
+                badge.textContent = '✗ FAILED';
+                badge.className = 'survival-badge failed';
+            }
+            
+            // ===== CURRENT REGIME =====
+            const currentAvg = (models.current.bootstrap.bcr + models.current.jump.bcr) / 2;
+            document.getElementById('current-bs-badge').textContent = models.current.bootstrap.bcr.toFixed(0) + '%';
+            document.getElementById('current-jd-badge').textContent = models.current.jump.bcr.toFixed(0) + '%';
+            document.getElementById('current-avg').textContent = currentAvg.toFixed(0) + '%';
+            
+            renderHistogram('current-bs-histogram', models.current.bootstrap.data.minBCRs, result.minBCR, '#a855f7', 'x', false);
+            renderHistogram('current-jd-histogram', models.current.jump.data.minBCRs, result.minBCR, '#a855f7', 'x', false);
+            
+            // ===== BEAR REGIME =====
+            const bearAvg = (models.bear.bootstrap.bcr + models.bear.jump.bcr) / 2;
+            document.getElementById('bear-bs-badge').textContent = models.bear.bootstrap.bcr.toFixed(0) + '%';
+            document.getElementById('bear-jd-badge').textContent = models.bear.jump.bcr.toFixed(0) + '%';
+            document.getElementById('bear-avg').textContent = bearAvg.toFixed(0) + '%';
+            
+            renderHistogram('bear-bs-histogram', models.bear.bootstrap.data.minBCRs, result.minBCR, '#ef4444', 'x', false);
+            renderHistogram('bear-jd-histogram', models.bear.jump.data.minBCRs, result.minBCR, '#ef4444', 'x', false);
+            
+            // ===== FULL CYCLE =====
+            const fullAvg = (models.full.bootstrap.bcr + models.full.jump.bcr) / 2;
+            document.getElementById('full-bs-badge').textContent = models.full.bootstrap.bcr.toFixed(0) + '%';
+            document.getElementById('full-jd-badge').textContent = models.full.jump.bcr.toFixed(0) + '%';
+            document.getElementById('full-avg').textContent = fullAvg.toFixed(0) + '%';
+            
+            renderHistogram('full-bs-histogram', models.full.bootstrap.data.minBCRs, result.minBCR, '#fbbf24', 'x', false);
+            renderHistogram('full-jd-histogram', models.full.jump.data.minBCRs, result.minBCR, '#fbbf24', 'x', false);
+            
+            // ===== BEST FIT CALCULATION =====
+            // Historical frequency: ~27% annual for crashes ≥75%
+            const historicalAnnualPct = 27; // approximately 3 crashes in 11 years
+            const horizon = 8; // years
+            const historicalExpected = historicalAnnualPct * horizon / 100; // ~2.2 crashes expected
+            
+            // Convert regime avg % to implied annual probability (rough)
+            // If X% of 8-year paths hit this severity, annual prob ≈ X/8
+            const currentImpliedAnnual = currentAvg / horizon;
+            const bearImpliedAnnual = bearAvg / horizon;
+            const fullImpliedAnnual = fullAvg / horizon;
+            
+            // Calculate error vs historical
+            const currentError = Math.abs(currentImpliedAnnual - historicalAnnualPct);
+            const bearError = Math.abs(bearImpliedAnnual - historicalAnnualPct);
+            const fullError = Math.abs(fullImpliedAnnual - historicalAnnualPct);
+            
+            // Find best fit
+            let bestFit = 'full';
+            let bestFitName = 'Full Cycle (2014-2025)';
+            let bestFitAvg = fullAvg;
+            let bestFitImplied = fullImpliedAnnual;
+            
+            if (bearError < fullError && bearError < currentError) {
+                bestFit = 'bear';
+                bestFitName = 'Bear (2018-2020)';
+                bestFitAvg = bearAvg;
+                bestFitImplied = bearImpliedAnnual;
+            } else if (currentError < fullError && currentError < bearError) {
+                bestFit = 'current';
+                bestFitName = 'Current (2021-2025)';
+                bestFitAvg = currentAvg;
+                bestFitImplied = currentImpliedAnnual;
+            }
+            
+            // Generate best fit content
+            const bestFitHTML = `
+                <span class="regime-winner">${bestFitName}</span> best matches historical crash frequency.
+                <br><br>
+                <strong>Comparison:</strong><br>
+                • Historical: <strong>${historicalAnnualPct}%</strong> annual probability<br>
+                • Current Regime implies: ${currentImpliedAnnual.toFixed(1)}%/year ${currentError < 10 ? '✓' : ''}<br>
+                • Bear Regime implies: ${bearImpliedAnnual.toFixed(1)}%/year ${bearError < 10 ? '✓' : ''}<br>
+                • Full Cycle implies: ${fullImpliedAnnual.toFixed(1)}%/year ${fullError < 10 ? '✓' : ''}
+            `;
+            document.getElementById('best-fit-content').innerHTML = bestFitHTML;
+            
+            // Generate comparison insight based on ALL regimes
+            const currentMax = Math.max(models.current.bootstrap.bcr, models.current.jump.bcr);
+            const bearMax = Math.max(models.bear.bootstrap.bcr, models.bear.jump.bcr);
+            const fullMax = Math.max(models.full.bootstrap.bcr, models.full.jump.bcr);
+            
+            let comparisonInsight = '';
+            const allMax = Math.max(currentMax, bearMax, fullMax);
+            
+            if (allMax < 5) {
+                // All regimes fail
+                comparisonInsight = `<div class="comparison-insight" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%); border-color: rgba(239, 68, 68, 0.4);">
+                    <div class="comparison-insight-title" style="color: #ef4444;">⚠️ Extreme Tail Event</div>
+                    <div class="comparison-insight-text">
+                        <strong>No regime produced scenarios as severe as this historical crash.</strong> 
+                        Even the Full Cycle data (which includes past crashes) fails to generate this severity level frequently.
+                        This crash represents a true outlier in Bitcoin's history.
+                    </div>
+                </div>`;
+            } else if (fullMax >= 15 && currentMax < 10) {
+                // Full Cycle captures it best
+                comparisonInsight = `<div class="comparison-insight" style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.05) 100%); border-color: rgba(251, 191, 36, 0.4);">
+                    <div class="comparison-insight-title" style="color: #fbbf24;">🔄 Full Cycle Data Required</div>
+                    <div class="comparison-insight-text">
+                        The <strong>Full Cycle (2014-2025)</strong> at ${fullAvg.toFixed(0)}% best captures this crash severity.
+                        Recent regime data alone (Current: ${currentAvg.toFixed(0)}%, Bear: ${bearAvg.toFixed(0)}%) underestimates.
+                        <strong>Include full historical data for accurate tail risk modeling.</strong>
+                    </div>
+                </div>`;
+            } else if (bearMax >= fullMax && bearMax >= currentMax && bearMax >= 15) {
+                // Bear regime captures it best
+                comparisonInsight = `<div class="comparison-insight" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%); border-color: rgba(34, 197, 94, 0.4);">
+                    <div class="comparison-insight-title" style="color: #22c55e;">🐻 Bear Regime Best Fit</div>
+                    <div class="comparison-insight-text">
+                        The <strong>Bear Regime (2018-2020)</strong> at ${bearAvg.toFixed(0)}% most accurately represents this crash.
+                        For conservative stress testing, use bear market calibration.
+                    </div>
+                </div>`;
+            } else {
+                // Show summary
+                comparisonInsight = `<div class="comparison-insight">
+                    <div class="comparison-insight-title">📊 Regime Comparison</div>
+                    <div class="comparison-insight-text">
+                        Current: ${currentAvg.toFixed(0)}% | Bear: ${bearAvg.toFixed(0)}% | Full: ${fullAvg.toFixed(0)}%<br>
+                        ${fullAvg > Math.max(currentAvg, bearAvg) ? 
+                            '<strong>Full Cycle</strong> provides the most comprehensive stress estimate.' :
+                            bearAvg > currentAvg ? 
+                                '<strong>Bear Regime</strong> is most conservative.' : 
+                                'Regimes show similar estimates.'}
+                    </div>
+                </div>`;
+            }
+            
+            document.getElementById('percentile-context').innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    At <strong>${result.startBCR.toFixed(1)}x BCR</strong>, the ${event.name} (-${result.maxDrawdown.toFixed(0)}% over ${Math.round((new Date(event.troughDate) - new Date(event.peakDate)) / (1000*60*60*24))} days) 
+                    would have brought your position to <strong>${result.minBCR.toFixed(1)}x BCR</strong>.
+                    ${result.survived ? 
+                        '<span style="color: var(--accent-green); font-weight: 600;">✓ Survived</span>' : 
+                        '<span style="color: var(--accent-red); font-weight: 600;">✗ Failed</span>'}
+                </div>
+                
+                ${comparisonInsight}
+            `;
+            
+            // Update Historical Rarity section using best fit regime
+            updateHistoricalRarity(event, bestFitAvg);
+        }
+        
+        // Unified histogram renderer
+        function renderHistogram(containerId, data, historicalValue, modelColor, suffix, isDrawdown) {
+            // Create histogram bins
+            const maxVal = isDrawdown ? Math.max(...data) : Math.min(Math.max(...data), 100);
+            const binSize = isDrawdown ? 5 : 2;
+            const bins = [];
+            const binCounts = [];
+            
+            for (let b = 0; b <= maxVal + binSize; b += binSize) {
+                bins.push(b);
+                const count = data.filter(v => v >= b && v < b + binSize).length;
+                binCounts.push(count);
+            }
+            
+            // For drawdowns, "worse" means higher; for BCR, "worse" means lower
+            const isWorse = isDrawdown 
+                ? (b => b > historicalValue) 
+                : (b => b < historicalValue);
+            
+            const histTrace = {
+                x: bins,
+                y: binCounts,
+                type: 'bar',
+                marker: {
+                    color: bins.map(b => isWorse(b) ? 'rgba(239, 68, 68, 0.6)' : modelColor + '60'),
+                    line: { color: 'rgba(255,255,255,0.15)', width: 1 }
+                },
+                hovertemplate: `%{x}${suffix}: %{y} sims<extra></extra>`
+            };
+            
+            const actualLine = {
+                x: [historicalValue, historicalValue],
+                y: [0, Math.max(...binCounts) * 1.15],
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#fbbf24', width: 2.5 },
+                name: 'Historical'
+            };
+            
+            const labelText = isDrawdown 
+                ? `-${historicalValue.toFixed(0)}%` 
+                : `${historicalValue.toFixed(1)}x`;
+            
+            Plotly.newPlot(containerId, [histTrace, actualLine], {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Space Grotesk', color: '#a0a0b0', size: 9 },
+                margin: { t: 5, r: 10, b: 25, l: 30 },
+                xaxis: {
+                    gridcolor: '#2a2a3a',
+                    ticksuffix: suffix,
+                    tickfont: { size: 8 }
+                },
+                yaxis: {
+                    gridcolor: '#2a2a3a',
+                    showticklabels: false
+                },
+                showlegend: false,
+                bargap: 0.08,
+                annotations: [{
+                    x: historicalValue,
+                    y: Math.max(...binCounts) * 0.9,
+                    text: labelText,
+                    showarrow: false,
+                    font: { color: '#fbbf24', size: 9, weight: 'bold' },
+                    bgcolor: 'rgba(251, 191, 36, 0.15)',
+                    borderpad: 2
+                }]
+            }, { responsive: true, displayModeBar: false });
+        }
+        
+        // Initialize stress test controls on page load
+        document.addEventListener('DOMContentLoaded', initStressTestControls);
+        
+        // Override selectDrawdown to also run stress test
+        const originalSelectDrawdown = selectDrawdown;
+        selectDrawdown = function(year) {
+            originalSelectDrawdown(year);
+            // Run stress test after a short delay to let UI update
+            setTimeout(() => {
+                if (selectedEvent) {
+                    runStressTest(selectedEvent);
+                }
+            }, 100);
+        };
     </script>
 </body>
 </html>

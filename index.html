@@ -262,6 +262,24 @@
             --card-glow: rgba(74, 158, 255, 0.15);
         }
 
+        .tool-card.liquidity {
+            --card-accent: rgba(0, 191, 255, 0.08);
+            --card-border: #00bfff;
+            --card-glow: rgba(0, 191, 255, 0.15);
+        }
+
+        .tool-card.allocation {
+            --card-accent: rgba(255, 153, 0, 0.08);
+            --card-border: #ff9900;
+            --card-glow: rgba(255, 153, 0, 0.15);
+        }
+
+        .tool-card.capital-strategy {
+            --card-accent: rgba(34, 197, 94, 0.08);
+            --card-border: #22c55e;
+            --card-glow: rgba(34, 197, 94, 0.15);
+        }
+
         .card-content {
             position: relative;
             z-index: 1;
@@ -304,6 +322,18 @@
             background: linear-gradient(135deg, rgba(74, 158, 255, 0.2) 0%, rgba(74, 158, 255, 0.05) 100%);
             border-color: rgba(74, 158, 255, 0.3);
         }
+        .liquidity .card-icon { 
+            background: linear-gradient(135deg, rgba(0, 191, 255, 0.2) 0%, rgba(0, 191, 255, 0.05) 100%);
+            border-color: rgba(0, 191, 255, 0.3);
+        }
+        .allocation .card-icon { 
+            background: linear-gradient(135deg, rgba(255, 153, 0, 0.2) 0%, rgba(255, 153, 0, 0.05) 100%);
+            border-color: rgba(255, 153, 0, 0.3);
+        }
+        .capital-strategy .card-icon { 
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.05) 100%);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
 
         .card-title {
             font-size: 1.4rem;
@@ -320,6 +350,9 @@
         .sata .card-title { color: #ffd700; }
         .drawdowns .card-title { color: var(--accent-red); }
         .regimes .card-title { color: var(--accent-blue); }
+        .liquidity .card-title { color: #00bfff; }
+        .allocation .card-title { color: #ff9900; }
+        .capital-strategy .card-title { color: #22c55e; }
 
         .card-description {
             color: var(--text-secondary);
@@ -364,6 +397,9 @@
         .sata .card-arrow { color: #ffd700; }
         .drawdowns .card-arrow { color: var(--accent-red); }
         .regimes .card-arrow { color: var(--accent-blue); }
+        .liquidity .card-arrow { color: #00bfff; }
+        .allocation .card-arrow { color: #ff9900; }
+        .capital-strategy .card-arrow { color: #22c55e; }
 
         /* Footer */
         .footer {
@@ -403,10 +439,10 @@
             </p>
         </div>
 
-        <!-- Dashboard Section -->
+        <!-- Risk Models Section -->
         <div class="section-wrapper">
             <div class="section-header dashboard">
-                <h3>Dashboard</h3>
+                <h3>Risk Models</h3>
                 <div class="section-line"></div>
             </div>
             <div class="tools-grid three-col">
@@ -444,18 +480,61 @@
                     <span class="card-arrow">→</span>
                 </a>
 
-                <a href="underwriting/regimes.html" class="tool-card regimes">
+                <a href="underwriting/capital-strategy.html" class="tool-card capital-strategy">
                     <div class="card-content">
-                        <div class="card-icon">🌡️</div>
-                        <h2 class="card-title">Regime & Correlation</h2>
+                        <div class="card-icon">⚖️</div>
+                        <h2 class="card-title">Capital Strategy</h2>
                         <p class="card-description">
-                            Market regime detection and volatility analysis. Understand how Bitcoin 
-                            behaves across bull, bear, and sideways markets.
+                            ATM vs PPE decision matrix. Determine when to lever up with credit ($SATA) 
+                            or delever with equity based on BCR, mNAV, and BTC outlook.
                         </p>
                         <div class="card-features">
-                            <span class="feature-tag">Regime Detection</span>
-                            <span class="feature-tag">Vol Analysis</span>
-                            <span class="feature-tag">Correlation</span>
+                            <span class="feature-tag">Accretion Analysis</span>
+                            <span class="feature-tag">mNAV Impact</span>
+                            <span class="feature-tag">Lever/Delever</span>
+                        </div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Market Analysis Section -->
+        <div class="section-wrapper">
+            <div class="section-header" style="color: var(--accent-blue);">
+                <h3 style="color: var(--accent-blue);">Market Analysis</h3>
+                <div class="section-line"></div>
+            </div>
+            <div class="tools-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <a href="underwriting/regimes.html" class="tool-card regimes">
+                    <div class="card-content">
+                        <div class="card-icon">📊</div>
+                        <h2 class="card-title">Correlation & Regimes</h2>
+                        <p class="card-description">
+                            Cross-asset correlation analysis vs S&P 500, Gold, DXY, and rates. 
+                            Essential for portfolio construction and diversification assessment.
+                        </p>
+                        <div class="card-features">
+                            <span class="feature-tag">Rolling Correlations</span>
+                            <span class="feature-tag">Regime Timeline</span>
+                            <span class="feature-tag">Stress Analysis</span>
+                        </div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </a>
+                
+                <a href="underwriting/liquidity.html" class="tool-card liquidity">
+                    <div class="card-content">
+                        <div class="card-icon">💧</div>
+                        <h2 class="card-title">Liquidity Analysis</h2>
+                        <p class="card-description">
+                            Analyze market depth, trading volumes, and liquidity conditions
+                            across exchanges to assess execution risk and market impact.
+                        </p>
+                        <div class="card-features">
+                            <span class="feature-tag">Market Depth</span>
+                            <span class="feature-tag">Volume Analysis</span>
+                            <span class="feature-tag">Execution Risk</span>
                         </div>
                     </div>
                     <span class="card-arrow">→</span>
@@ -520,6 +599,23 @@
                     </div>
                     <span class="card-arrow">→</span>
                 </a>
+                
+                <a href="portfolio-allocation.html" class="tool-card allocation">
+                    <div class="card-content">
+                        <div class="card-icon">📈</div>
+                        <h2 class="card-title">$SATA Portfolio Allocation</h2>
+                        <p class="card-description">
+                            Efficient frontier analysis showing how $SATA's 12% yield and low correlation
+                            can enhance institutional portfolios.
+                        </p>
+                        <div class="card-features">
+                            <span class="feature-tag">Efficient Frontier</span>
+                            <span class="feature-tag">Risk/Return</span>
+                            <span class="feature-tag">Regime Analysis</span>
+                        </div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </a>
             </div>
         </div>
 
@@ -529,3 +625,4 @@
     </div>
 </body>
 </html>
+

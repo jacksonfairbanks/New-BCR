@@ -3,119 +3,568 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BTC Regime Analysis | Underwriting Dashboard</title>
+    <title>BTC Correlation & Stress Analysis | Underwriting Dashboard</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="../js/btc-data.js"></script>
-    <script src="../js/utils.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/dashboard.css">
     <style>
-        /* Page-specific styles */
-        .regime-card {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --border-color: #2a2a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+            --accent-orange: #f7931a;
+            --accent-red: #ef4444;
+            --accent-green: #22c55e;
+            --accent-blue: #4a9eff;
+            --accent-purple: #a855f7;
+            --accent-yellow: #fbbf24;
+            --accent-cyan: #06b6d4;
         }
         
-        .regime-card.bull {
-            border-color: var(--accent-green);
-            background: rgba(0, 212, 170, 0.05);
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
         
-        .regime-card.bear {
-            border-color: var(--accent-red);
-            background: rgba(255, 71, 87, 0.05);
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(74, 158, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(239, 68, 68, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
         }
         
-        .regime-card.sideways {
-            border-color: var(--accent-orange);
-            background: rgba(247, 147, 26, 0.05);
-        }
-        
-        .regime-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .regime-label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-        
-        .regime-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 2rem;
-            font-weight: 700;
-        }
-        
-        .regime-sub {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 5px;
-        }
-        
-        .correlation-matrix {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 2px;
-            max-width: 500px;
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1600px;
             margin: 0 auto;
+            padding: 30px;
         }
         
-        .matrix-cell {
-            aspect-ratio: 1;
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(74, 158, 255, 0.1));
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            border-radius: 4px;
+            font-size: 24px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
         }
         
-        .matrix-header {
+        .logo h1 { font-size: 1.5rem; font-weight: 600; }
+        .subtitle { color: var(--text-muted); font-size: 0.9rem; }
+        
+        .home-btn {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .home-btn:hover {
             background: var(--bg-tertiary);
-            color: var(--text-muted);
-            font-weight: 600;
+            color: var(--text-primary);
+            border-color: var(--accent-cyan);
         }
         
-        .vol-comparison {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.loading { background: var(--accent-yellow); }
+        .status-dot.success { background: var(--accent-green); animation: none; }
+        .status-dot.error { background: var(--accent-red); animation: none; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Chart Cards */
+        .chart-card {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(18, 18, 26, 0.8) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        /* Make Plotly tooltips readable with solid background */
+        .hoverlayer .hovertext rect {
+            fill: #1a1a2e !important;
+            stroke: #3a3a4a !important;
+            stroke-width: 1px !important;
+        }
+        
+        .hoverlayer .hovertext text {
+            fill: #ffffff !important;
+        }
+        
+        /* Unified hover label solid background */
+        .hoverlayer .legend rect,
+        .hoverlayer g.hovertext path {
+            fill: #1a1a2e !important;
+            stroke: #3a3a4a !important;
+        }
+        
+        .hovertext {
+            background: #1a1a2e !important;
+        }
+        
+        /* X unified hover box */
+        .hoverlayer .spike-line-group,
+        .hoverlayer .hoverlabel {
+            opacity: 1 !important;
+        }
+        
+        .hoverlayer .hoverlabel path {
+            fill: #1a1a2e !important;
+            stroke: #3a3a4a !important;
+        }
+        
+        .hoverlayer .hoverlabel text {
+            fill: #ffffff !important;
+        }
+        
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
             gap: 15px;
+        }
+        
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chart-title .icon { font-size: 1.3rem; }
+        
+        .chart-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-left: 10px;
+            font-weight: 400;
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .toggle-group {
+            display: flex;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 2px;
+        }
+        
+        .toggle-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .toggle-btn:hover { color: var(--text-primary); }
+        .toggle-btn.active {
+            background: var(--accent-blue);
+            color: #fff;
+        }
+        
+        /* Correlation Legend */
+        .corr-legend {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .corr-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 15px;
+        }
+        
+        .corr-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        /* Stress Periods Grid */
+        .stress-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
             margin-top: 20px;
         }
         
-        .vol-card {
-            text-align: center;
-            padding: 15px;
+        .stress-card {
             background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--accent-red);
+        }
+        
+        .stress-card:hover {
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239, 68, 68, 0.15);
+        }
+        
+        .stress-card.selected {
+            border-color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .stress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .stress-name {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .stress-dates {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .stress-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+        
+        .stress-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+        
+        .stress-stat {
+            text-align: center;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
             border-radius: 8px;
         }
         
-        .vol-bar {
-            height: 100px;
-            width: 40px;
-            margin: 10px auto;
-            background: var(--border-color);
+        .stress-stat-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .stress-stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        
+        .stress-stat-value.positive { color: var(--accent-green); }
+        .stress-stat-value.negative { color: var(--accent-red); }
+        .stress-stat-value.neutral { color: var(--text-secondary); }
+        
+        /* Detail Panel */
+        .detail-panel {
+            display: none;
+            margin-top: 24px;
+            padding: 24px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .detail-panel.visible { display: block; }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .detail-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .detail-context {
+            background: rgba(247, 147, 26, 0.08);
+            border-left: 3px solid var(--accent-orange);
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        
+        .close-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        
+        .close-btn:hover {
+            background: var(--accent-red);
+            border-color: var(--accent-red);
+            color: white;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .detail-grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Correlation Matrix */
+        .corr-matrix {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 16px;
+        }
+        
+        .corr-matrix-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .corr-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .corr-row:last-child { border-bottom: none; }
+        
+        .corr-asset {
+            width: 80px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .corr-bar-container {
+            flex: 1;
+            height: 24px;
+            background: rgba(255,255,255,0.05);
             border-radius: 4px;
             position: relative;
             overflow: hidden;
         }
         
-        .vol-fill {
+        .corr-bar {
             position: absolute;
-            bottom: 0;
-            width: 100%;
-            background: var(--accent-purple);
-            border-radius: 0 0 4px 4px;
-            transition: height 0.5s ease;
+            top: 0;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
         }
+        
+        .corr-bar.positive {
+            left: 50%;
+            background: linear-gradient(90deg, transparent, var(--accent-red));
+        }
+        
+        .corr-bar.negative {
+            right: 50%;
+            background: linear-gradient(270deg, transparent, var(--accent-green));
+        }
+        
+        .corr-value {
+            width: 60px;
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        
+        .corr-center-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Insight Box */
+        .insight-box {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 16px;
+        }
+        
+        .insight-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .insight-item:last-child { border-bottom: none; }
+        
+        .insight-icon { font-size: 1.2rem; }
+        
+        .insight-text {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        
+        .insight-text strong { color: var(--text-primary); }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: var(--text-muted);
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .chart-header { flex-direction: column; align-items: flex-start; }
+            header { flex-direction: column; gap: 15px; align-items: flex-start; }
+        }
+        
     </style>
 </head>
 <body>
@@ -124,429 +573,1297 @@
     <div class="container">
         <header>
             <div class="logo">
-                <div class="btc-icon">📊</div>
-                <h1>Correlation & Regime Behavior</h1>
+                <div class="logo-icon">📊</div>
+                <div>
+                    <h1>Correlation & Stress Analysis</h1>
+                    <div class="subtitle">How BTC correlates with macro assets during market stress</div>
+                </div>
             </div>
-            <p class="subtitle">Market Regime Detection & Cross-Asset Correlation Analysis</p>
             <a href="../index.html" class="home-btn">← Dashboard</a>
         </header>
-
-        <div class="main-grid">
-            <!-- Control Panel -->
-            <div class="control-panel">
-                <div class="panel-title">Regime Parameters</div>
-                
-                <div class="control-section">
-                    <div class="section-label">Analysis Window</div>
-                    <div class="control-group">
-                        <div class="control-label">
-                            <span>Rolling Window</span>
-                            <span class="control-value" id="val-window">90 days</span>
-                        </div>
-                        <input type="range" id="window" min="30" max="365" value="90" step="30">
-                        <div class="control-hint">Window for regime calculation</div>
-                    </div>
+        
+        <!-- Data Status -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot loading" id="status-btc"></span>
+                <span>BTC</span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot loading" id="status-spy"></span>
+                <span>SPY</span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot loading" id="status-gld"></span>
+                <span>GLD</span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot loading" id="status-tlt"></span>
+                <span>TLT</span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot loading" id="status-uup"></span>
+                <span>UUP (Dollar)</span>
+            </div>
+            <div class="status-item" style="margin-left: auto; color: var(--text-muted);">
+                <span id="data-range">Loading data...</span>
+            </div>
+        </div>
+        
+        <!-- Price Overlay Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <span class="icon">💹</span>
+                    Asset Price Performance
+                    <span class="chart-subtitle">Normalized to 100 at period start</span>
                 </div>
-                
-                <div class="control-section">
-                    <div class="section-label">Regime Thresholds</div>
+                <div class="controls">
                     <div class="control-group">
-                        <div class="control-label">
-                            <span>Bull Threshold</span>
-                            <span class="control-value" id="val-bull">50%</span>
+                        <span class="control-label">Time Frame:</span>
+                        <div class="toggle-group" id="timeframe-selector">
+                            <button class="toggle-btn active" data-period="max">Max</button>
+                            <button class="toggle-btn" data-period="10y">10Y</button>
+                            <button class="toggle-btn" data-period="5y">5Y</button>
+                            <button class="toggle-btn" data-period="3y">3Y</button>
+                            <button class="toggle-btn" data-period="1y">1Y</button>
+                            <button class="toggle-btn" data-period="6m">6M</button>
                         </div>
-                        <input type="range" id="bull" min="20" max="100" value="50" step="10">
-                        <div class="control-hint">Annual return above this = Bull</div>
-                    </div>
-                    <div class="control-group">
-                        <div class="control-label">
-                            <span>Bear Threshold</span>
-                            <span class="control-value" id="val-bear">-20%</span>
-                        </div>
-                        <input type="range" id="bear" min="-50" max="0" value="-20" step="5">
-                        <div class="control-hint">Annual return below this = Bear</div>
-                    </div>
-                </div>
-                
-                <div class="control-section">
-                    <div class="section-label">Volatility Analysis</div>
-                    <div class="control-group">
-                        <div class="control-label">
-                            <span>Vol Window</span>
-                            <span class="control-value" id="val-vol-window">30 days</span>
-                        </div>
-                        <input type="range" id="vol-window" min="7" max="90" value="30" step="7">
-                    </div>
-                </div>
-                
-                <button class="run-btn" onclick="runRegimeAnalysis()">
-                    🔬 Analyze Regimes
-                </button>
-                
-                <div class="derived-values" style="margin-top: 20px;">
-                    <div class="derived-row">
-                        <span class="derived-label">Current Regime</span>
-                        <span class="derived-value" id="current-regime" style="color: var(--text-muted)">--</span>
-                    </div>
-                    <div class="derived-row">
-                        <span class="derived-label">Current Volatility</span>
-                        <span class="derived-value" id="current-vol">--</span>
-                    </div>
-                    <div class="derived-row">
-                        <span class="derived-label">Regime Duration</span>
-                        <span class="derived-value" id="regime-duration">--</span>
                     </div>
                 </div>
             </div>
-
-            <!-- Charts Area -->
-            <div class="charts-area">
-                <!-- Regime Distribution -->
-                <div class="regime-grid">
-                    <div class="regime-card bull">
-                        <div class="regime-label" style="color: var(--accent-green)">Bull Market</div>
-                        <div class="regime-value" style="color: var(--accent-green)" id="bull-pct">--%</div>
-                        <div class="regime-sub" id="bull-days">-- days total</div>
-                    </div>
-                    <div class="regime-card sideways">
-                        <div class="regime-label" style="color: var(--accent-orange)">Sideways</div>
-                        <div class="regime-value" style="color: var(--accent-orange)" id="sideways-pct">--%</div>
-                        <div class="regime-sub" id="sideways-days">-- days total</div>
-                    </div>
-                    <div class="regime-card bear">
-                        <div class="regime-label" style="color: var(--accent-red)">Bear Market</div>
-                        <div class="regime-value" style="color: var(--accent-red)" id="bear-pct">--%</div>
-                        <div class="regime-sub" id="bear-days">-- days total</div>
-                    </div>
+            
+            <div class="corr-legend">
+                <div class="corr-legend-item">
+                    <span class="corr-legend-dot" style="background: #f7931a;"></span>
+                    <span>BTC</span>
                 </div>
-
-                <!-- Regime Timeline -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div class="chart-title">Regime Timeline</div>
-                    </div>
-                    <div id="regime-chart" class="chart-container"></div>
+                <div class="corr-legend-item">
+                    <span class="corr-legend-dot" style="background: #4a9eff;"></span>
+                    <span>SPY</span>
                 </div>
-
-                <!-- Volatility by Regime -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div class="chart-title">Volatility by Regime</div>
-                    </div>
-                    <div class="vol-comparison">
-                        <div class="vol-card">
-                            <div style="font-size: 0.8rem; color: var(--text-muted)">Bull</div>
-                            <div class="vol-bar">
-                                <div class="vol-fill" id="vol-bull" style="height: 0%; background: var(--accent-green)"></div>
-                            </div>
-                            <div style="font-family: 'JetBrains Mono'; font-size: 0.9rem" id="vol-bull-val">--%</div>
-                        </div>
-                        <div class="vol-card">
-                            <div style="font-size: 0.8rem; color: var(--text-muted)">Sideways</div>
-                            <div class="vol-bar">
-                                <div class="vol-fill" id="vol-sideways" style="height: 0%; background: var(--accent-orange)"></div>
-                            </div>
-                            <div style="font-family: 'JetBrains Mono'; font-size: 0.9rem" id="vol-sideways-val">--%</div>
-                        </div>
-                        <div class="vol-card">
-                            <div style="font-size: 0.8rem; color: var(--text-muted)">Bear</div>
-                            <div class="vol-bar">
-                                <div class="vol-fill" id="vol-bear" style="height: 0%; background: var(--accent-red)"></div>
-                            </div>
-                            <div style="font-family: 'JetBrains Mono'; font-size: 0.9rem" id="vol-bear-val">--%</div>
-                        </div>
-                        <div class="vol-card">
-                            <div style="font-size: 0.8rem; color: var(--text-muted)">Overall</div>
-                            <div class="vol-bar">
-                                <div class="vol-fill" id="vol-overall" style="height: 0%; background: var(--accent-purple)"></div>
-                            </div>
-                            <div style="font-family: 'JetBrains Mono'; font-size: 0.9rem" id="vol-overall-val">--%</div>
+                <div class="corr-legend-item">
+                    <span class="corr-legend-dot" style="background: #fbbf24;"></span>
+                    <span>GLD</span>
+                </div>
+                <div class="corr-legend-item">
+                    <span class="corr-legend-dot" style="background: #a855f7;"></span>
+                    <span>TLT</span>
+                </div>
+                <div class="corr-legend-item">
+                    <span class="corr-legend-dot" style="background: #22c55e;"></span>
+                    <span>UUP</span>
+                </div>
+            </div>
+            
+            <div id="price-chart" style="height: 350px;">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading price data...
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Rolling Correlation Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <span class="icon">📈</span>
+                    BTC Rolling Correlation vs Macro Assets
+                    <span class="chart-subtitle">Click diamonds for detailed analysis • Same time frame as above</span>
+                </div>
+                <div class="controls">
+                    <div class="control-group">
+                        <span class="control-label">Rolling Window:</span>
+                        <div class="toggle-group">
+                            <button class="toggle-btn" data-window="21" title="21-day rolling correlation">1M</button>
+                            <button class="toggle-btn active" data-window="42" title="42-day rolling correlation">2M</button>
+                            <button class="toggle-btn" data-window="63" title="63-day rolling correlation">3M</button>
                         </div>
                     </div>
                 </div>
-
-                <!-- Rolling Volatility Chart -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div class="chart-title">Rolling Volatility Over Time</div>
+            </div>
+            
+            <div class="corr-legend">
+                <div class="corr-legend-item">
+                    <span class="corr-legend-dot" style="background: #4a9eff;"></span>
+                    <span>SPY (Equities)</span>
+                </div>
+                <div class="corr-legend-item">
+                    <span class="corr-legend-dot" style="background: #fbbf24;"></span>
+                    <span>GLD (Gold)</span>
+                </div>
+                <div class="corr-legend-item">
+                    <span class="corr-legend-dot" style="background: #a855f7;"></span>
+                    <span>TLT (Bonds)</span>
+                </div>
+                <div class="corr-legend-item">
+                    <span class="corr-legend-dot" style="background: #22c55e;"></span>
+                    <span>UUP (Dollar)</span>
+                </div>
+                <div class="corr-legend-item">
+                    <span class="corr-legend-dot" style="background: rgba(239,68,68,0.3);"></span>
+                    <span>Stress Period (SPY -10%+)</span>
+                </div>
+            </div>
+            
+            <div id="correlation-chart" style="height: 450px;">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Fetching market data...
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stress Periods -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <span class="icon">⚠️</span>
+                    Major Stress Periods
+                    <span class="chart-subtitle">SPY drawdowns > 10%</span>
+                </div>
+            </div>
+            
+            <div class="stress-grid" id="stress-grid">
+                <div class="loading" style="grid-column: 1 / -1; height: 200px;">
+                    <div class="loading-spinner"></div>
+                    Loading stress periods...
+                </div>
+            </div>
+            
+            <!-- Detail Panel (shown when stress period clicked) -->
+            <div class="detail-panel" id="detail-panel">
+                <div class="detail-header">
+                    <div class="detail-title" id="detail-title">COVID Crash - March 2020</div>
+                    <button class="close-btn" onclick="closeDetailPanel()">✕ Close</button>
+                </div>
+                
+                <div class="detail-context" id="detail-context">
+                    <!-- Context populated by JS -->
+                </div>
+                
+                <div class="detail-grid">
+                    <div class="corr-matrix">
+                        <div class="corr-matrix-title">📊 BTC Correlation During Crisis</div>
+                        <div id="corr-matrix-content">
+                            <!-- Populated by JS -->
+                        </div>
                     </div>
-                    <div id="vol-chart" class="chart-container"></div>
-                    <div class="context-box" id="vol-context">
-                        Volatility analysis helps calibrate risk models for different market conditions.
+                    
+                    <div class="insight-box">
+                        <div class="insight-title">💡 Key Insights</div>
+                        <div id="insights-content">
+                            <!-- Populated by JS -->
+                        </div>
                     </div>
+                </div>
+                
+                <div id="detail-chart" style="height: 300px; margin-top: 20px;"></div>
+            </div>
+        </div>
+        
+        <!-- Summary Stats -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <span class="icon">📋</span>
+                    Correlation Summary
+                </div>
+            </div>
+            
+            <div class="stress-grid" id="summary-grid">
+                <div class="loading" style="grid-column: 1 / -1; height: 150px;">
+                    <div class="loading-spinner"></div>
+                    Calculating correlations...
                 </div>
             </div>
         </div>
     </div>
-
+    
     <script>
-        // Regime & Correlation Analysis
-        // ==============================
+        // ============================================
+        // DATA FETCHING
+        // ============================================
         
-        const { mean, std, formatPercent, CHART_COLORS } = window.DashboardUtils;
+        const SYMBOLS = {
+            spy: 'SPY',
+            gld: 'GLD', 
+            tlt: 'TLT',
+            uup: 'UUP'  // Dollar ETF proxy for DXY
+        };
         
-        let regimeResults = null;
+        const ASSET_COLORS = {
+            spy: '#4a9eff',
+            gld: '#fbbf24',
+            tlt: '#a855f7',
+            uup: '#22c55e'
+        };
         
-        function runRegimeAnalysis() {
-            console.log('Running regime analysis...');
-            
-            const window = parseInt(document.getElementById('window').value);
-            const bullThreshold = parseInt(document.getElementById('bull').value) / 100;
-            const bearThreshold = parseInt(document.getElementById('bear').value) / 100;
-            const volWindow = parseInt(document.getElementById('vol-window').value);
-            
-            const data = BTC_RAW_DATA;
-            
-            // Calculate rolling returns and regimes
-            const regimes = calculateRegimes(data, window, bullThreshold, bearThreshold);
-            
-            // Calculate volatility by regime
-            const volByRegime = calculateVolatilityByRegime(data, regimes, volWindow);
-            
-            // Calculate rolling volatility
-            const rollingVol = calculateRollingVol(data, volWindow);
-            
-            regimeResults = {
-                regimes,
-                volByRegime,
-                rollingVol,
-                distribution: countRegimes(regimes)
-            };
-            
-            updateRegimeStats();
-            updateRegimeChart(data, regimes);
-            updateVolatilityBars(volByRegime);
-            updateVolatilityChart(data, rollingVol, regimes);
-        }
+        const ASSET_NAMES = {
+            spy: 'SPY (Equities)',
+            gld: 'GLD (Gold)',
+            tlt: 'TLT (Bonds)',
+            uup: 'UUP (Dollar)'
+        };
         
-        function calculateRegimes(data, window, bullThreshold, bearThreshold) {
-            const regimes = [];
+        // State
+        let allData = {};
+        let stressPeriods = [];
+        let correlationWindow = 42;
+        let selectedPeriod = 'max';
+        let sharedDateRange = { start: null, end: null };
+        
+        // Get start date for selected period
+        function getPeriodStartDate(period) {
+            const now = new Date();
+            let start = new Date();
             
-            for (let i = window; i < data.length; i++) {
-                const periodReturn = (data[i].price - data[i - window].price) / data[i - window].price;
-                const annualizedReturn = periodReturn * (365 / window);
-                
-                let regime;
-                if (annualizedReturn > bullThreshold) {
-                    regime = 'bull';
-                } else if (annualizedReturn < bearThreshold) {
-                    regime = 'bear';
-                } else {
-                    regime = 'sideways';
-                }
-                
-                regimes.push({
-                    date: data[i].date,
-                    price: data[i].price,
-                    return: annualizedReturn,
-                    regime
-                });
+            switch(period) {
+                case 'max': return '2010-01-01'; // Bitcoin inception era
+                case '10y': start.setFullYear(now.getFullYear() - 10); break;
+                case '5y': start.setFullYear(now.getFullYear() - 5); break;
+                case '3y': start.setFullYear(now.getFullYear() - 3); break;
+                case '1y': start.setFullYear(now.getFullYear() - 1); break;
+                case '6m': start.setMonth(now.getMonth() - 6); break;
+                case '1m': start.setMonth(now.getMonth() - 1); break;
+                default: start.setFullYear(now.getFullYear() - 1);
             }
             
-            return regimes;
+            return start.toISOString().split('T')[0];
         }
+        let selectedStressPeriod = null;
         
-        function calculateVolatilityByRegime(data, regimes, volWindow) {
-            const returns = [];
-            for (let i = 1; i < data.length; i++) {
-                returns.push(Math.log(data[i].price / data[i-1].price));
-            }
+        // Fetch data from Yahoo Finance
+        async function fetchYahooData(symbol) {
+            const endDate = new Date();
+            const startDate = new Date('2014-01-01');
             
-            const bullReturns = [];
-            const bearReturns = [];
-            const sidewaysReturns = [];
+            const period1 = Math.floor(startDate.getTime() / 1000);
+            const period2 = Math.floor(endDate.getTime() / 1000);
             
-            regimes.forEach((r, i) => {
-                const returnIdx = i + (data.length - regimes.length);
-                if (returnIdx > 0 && returnIdx < returns.length) {
-                    const ret = returns[returnIdx];
-                    if (r.regime === 'bull') bullReturns.push(ret);
-                    else if (r.regime === 'bear') bearReturns.push(ret);
-                    else sidewaysReturns.push(ret);
+            // Use a CORS proxy for Yahoo Finance
+            const corsProxy = 'https://corsproxy.io/?';
+            const url = `${corsProxy}https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${period1}&period2=${period2}&interval=1d`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!data.chart || !data.chart.result || !data.chart.result[0]) {
+                    throw new Error('Invalid response');
                 }
-            });
-            
-            const annualize = (arr) => arr.length > 1 ? std(arr) * Math.sqrt(365) * 100 : 0;
-            
-            return {
-                bull: annualize(bullReturns),
-                bear: annualize(bearReturns),
-                sideways: annualize(sidewaysReturns),
-                overall: annualize(returns)
-            };
-        }
-        
-        function calculateRollingVol(data, window) {
-            const result = [];
-            
-            for (let i = window; i < data.length; i++) {
-                const returns = [];
-                for (let j = i - window + 1; j <= i; j++) {
-                    if (data[j-1] && data[j-1].price > 0) {
-                        returns.push(Math.log(data[j].price / data[j-1].price));
+                
+                const result = data.chart.result[0];
+                const timestamps = result.timestamp;
+                const closes = result.indicators.quote[0].close;
+                
+                const prices = [];
+                for (let i = 0; i < timestamps.length; i++) {
+                    if (closes[i] !== null) {
+                        prices.push({
+                            date: new Date(timestamps[i] * 1000).toISOString().split('T')[0],
+                            price: closes[i]
+                        });
                     }
                 }
                 
-                const vol = std(returns) * Math.sqrt(365) * 100;
-                result.push({
-                    date: data[i].date,
-                    vol
-                });
+                return prices;
+            } catch (err) {
+                console.error(`Error fetching ${symbol}:`, err);
+                return null;
             }
-            
-            return result;
         }
         
-        function countRegimes(regimes) {
-            const counts = { bull: 0, bear: 0, sideways: 0 };
-            regimes.forEach(r => counts[r.regime]++);
-            const total = regimes.length;
-            return {
-                bull: { count: counts.bull, pct: (counts.bull / total) * 100 },
-                bear: { count: counts.bear, pct: (counts.bear / total) * 100 },
-                sideways: { count: counts.sideways, pct: (counts.sideways / total) * 100 }
-            };
-        }
-        
-        function updateRegimeStats() {
-            const dist = regimeResults.distribution;
-            
-            document.getElementById('bull-pct').textContent = formatPercent(dist.bull.pct, 0);
-            document.getElementById('bull-days').textContent = dist.bull.count + ' days';
-            
-            document.getElementById('sideways-pct').textContent = formatPercent(dist.sideways.pct, 0);
-            document.getElementById('sideways-days').textContent = dist.sideways.count + ' days';
-            
-            document.getElementById('bear-pct').textContent = formatPercent(dist.bear.pct, 0);
-            document.getElementById('bear-days').textContent = dist.bear.count + ' days';
-            
-            // Current regime
-            const lastRegime = regimeResults.regimes[regimeResults.regimes.length - 1];
-            const regimeEl = document.getElementById('current-regime');
-            regimeEl.textContent = lastRegime.regime.toUpperCase();
-            regimeEl.style.color = lastRegime.regime === 'bull' ? 'var(--accent-green)' : 
-                                   lastRegime.regime === 'bear' ? 'var(--accent-red)' : 'var(--accent-orange)';
-            
-            document.getElementById('current-vol').textContent = 
-                formatPercent(regimeResults.volByRegime.overall, 1);
-            
-            // Count consecutive days in current regime
-            let duration = 0;
-            const currentRegime = lastRegime.regime;
-            for (let i = regimeResults.regimes.length - 1; i >= 0; i--) {
-                if (regimeResults.regimes[i].regime === currentRegime) duration++;
-                else break;
+        // Update status indicator
+        function updateStatus(asset, status) {
+            const el = document.getElementById(`status-${asset}`);
+            if (el) {
+                el.className = `status-dot ${status}`;
             }
-            document.getElementById('regime-duration').textContent = duration + ' days';
         }
         
-        function updateRegimeChart(data, regimes) {
-            // Price trace
-            const priceTrace = {
-                x: regimes.map(r => r.date),
-                y: regimes.map(r => r.price),
-                type: 'scatter',
-                mode: 'lines',
-                name: 'BTC Price',
-                line: { color: '#ffffff', width: 1 },
-                yaxis: 'y'
+        // Load all data
+        async function loadAllData() {
+            console.log('[Regimes] Loading data...');
+            
+            // Fetch ALL assets from Yahoo Finance (including BTC for fresh data)
+            const allSymbols = {
+                btc: 'BTC-USD',
+                spy: 'SPY',
+                gld: 'GLD',
+                tlt: 'TLT',
+                uup: 'UUP'
             };
             
-            // Regime background areas
-            const bullAreas = [];
-            const bearAreas = [];
-            
-            regimes.forEach((r, i) => {
-                if (i === 0) return;
-                const shapes = r.regime === 'bull' ? bullAreas : r.regime === 'bear' ? bearAreas : null;
-                if (shapes) {
-                    shapes.push({
-                        type: 'rect',
-                        xref: 'x', yref: 'paper',
-                        x0: regimes[i-1].date, x1: r.date,
-                        y0: 0, y1: 1,
-                        fillcolor: r.regime === 'bull' ? 'rgba(0,212,170,0.1)' : 'rgba(255,71,87,0.1)',
-                        line: { width: 0 }
-                    });
+            const fetchPromises = Object.entries(allSymbols).map(async ([key, symbol]) => {
+                const data = await fetchYahooData(symbol);
+                if (data && data.length > 0) {
+                    allData[key] = data;
+                    updateStatus(key, 'success');
+                    console.log(`[Regimes] ${symbol}: ${data.length} days`);
+                } else {
+                    updateStatus(key, 'error');
+                    console.error(`${symbol} load failed`);
                 }
             });
             
-            Plotly.react('regime-chart', [priceTrace], {
+            await Promise.all(fetchPromises);
+            
+            // Update data range display
+            if (allData.btc && allData.btc.length > 0) {
+                const start = allData.btc[0].date;
+                const end = allData.btc[allData.btc.length - 1].date;
+                document.getElementById('data-range').textContent = `${start} to ${end}`;
+            }
+            
+            return Object.keys(allData).length >= 3; // At least BTC + 2 others
+        }
+        
+        // ============================================
+        // CALCULATIONS
+        // ============================================
+        
+        // Align data by date
+        function alignData(data1, data2) {
+            const map2 = new Map(data2.map(d => [d.date, d.price]));
+            const aligned1 = [];
+            const aligned2 = [];
+            
+            for (const d of data1) {
+                if (map2.has(d.date)) {
+                    aligned1.push(d.price);
+                    aligned2.push(map2.get(d.date));
+                }
+            }
+            
+            return { prices1: aligned1, prices2: aligned2 };
+        }
+        
+        // Calculate returns
+        function calculateReturns(prices) {
+            const returns = [];
+            for (let i = 1; i < prices.length; i++) {
+                returns.push((prices[i] - prices[i-1]) / prices[i-1]);
+            }
+            return returns;
+        }
+        
+        // Calculate correlation
+        function correlation(x, y) {
+            const n = x.length;
+            if (n < 10) return null;
+            
+            const meanX = x.reduce((a, b) => a + b, 0) / n;
+            const meanY = y.reduce((a, b) => a + b, 0) / n;
+            
+            let num = 0, denX = 0, denY = 0;
+            for (let i = 0; i < n; i++) {
+                const dx = x[i] - meanX;
+                const dy = y[i] - meanY;
+                num += dx * dy;
+                denX += dx * dx;
+                denY += dy * dy;
+            }
+            
+            const corr = num / (Math.sqrt(denX) * Math.sqrt(denY));
+            return isNaN(corr) ? null : corr;
+        }
+        
+        // Rolling correlation
+        function rollingCorrelation(data1, data2, window) {
+            const { prices1, prices2 } = alignData(data1, data2);
+            const returns1 = calculateReturns(prices1);
+            const returns2 = calculateReturns(prices2);
+            
+            const correlations = [];
+            const dates = [];
+            
+            // Get aligned dates
+            const map2 = new Map(data2.map(d => [d.date, true]));
+            const alignedDates = data1.filter(d => map2.has(d.date)).map(d => d.date);
+            
+            for (let i = window; i < returns1.length; i++) {
+                const slice1 = returns1.slice(i - window, i);
+                const slice2 = returns2.slice(i - window, i);
+                const corr = correlation(slice1, slice2);
+                correlations.push(corr);
+                dates.push(alignedDates[i + 1]); // +1 because returns array is 1 shorter
+            }
+            
+            return { correlations, dates };
+        }
+        
+        // Detect stress periods from SPY data (major drawdowns only)
+        function detectStressPeriods(spyData, threshold = -0.15) {
+            // Use predefined major stress periods for accuracy
+            const knownPeriods = [
+                { 
+                    name: 'China Devaluation', 
+                    startDate: '2015-08-10', 
+                    troughDate: '2015-08-25', 
+                    endDate: '2015-10-01', 
+                    maxDrawdown: -0.12,
+                    context: 'China unexpectedly devalued the yuan, triggering global risk-off sentiment. Concerns about Chinese economic slowdown and capital flight sparked a flash crash across global markets.'
+                },
+                { 
+                    name: 'Growth Scare', 
+                    startDate: '2015-12-29', 
+                    troughDate: '2016-02-11', 
+                    endDate: '2016-04-01', 
+                    maxDrawdown: -0.14,
+                    context: 'Global growth fears intensified as oil prices collapsed below $30/barrel and concerns about a Chinese hard landing mounted. The Fed had just raised rates for the first time since 2008.'
+                },
+                { 
+                    name: 'Q4 2018 Selloff', 
+                    startDate: '2018-09-21', 
+                    troughDate: '2018-12-24', 
+                    endDate: '2019-01-18', 
+                    maxDrawdown: -0.20,
+                    context: 'Fed rate hikes, US-China trade war escalation, and slowing global growth drove a sharp correction. The Fed signaled a pivot to patience in early 2019, sparking recovery.'
+                },
+                { 
+                    name: 'COVID Crash', 
+                    startDate: '2020-02-19', 
+                    troughDate: '2020-03-23', 
+                    endDate: '2020-04-17', 
+                    maxDrawdown: -0.34,
+                    context: 'The fastest bear market in history as COVID-19 pandemic fears triggered a global liquidity crisis. Massive Fed intervention and fiscal stimulus drove a historic V-shaped recovery.'
+                },
+                { 
+                    name: 'Fed Tightening 2022', 
+                    startDate: '2022-01-03', 
+                    troughDate: '2022-06-16', 
+                    endDate: '2022-08-16', 
+                    maxDrawdown: -0.24,
+                    context: 'The Fed began its most aggressive rate hiking cycle in 40 years to combat 9% inflation. Risk assets repriced as the "everything bubble" deflated and the LUNA/Terra collapse shook crypto.'
+                },
+                { 
+                    name: 'Q4 2022 Selloff', 
+                    startDate: '2022-08-16', 
+                    troughDate: '2022-10-12', 
+                    endDate: '2022-11-30', 
+                    maxDrawdown: -0.17,
+                    context: 'Continued Fed hawkishness, recession fears, and the FTX collapse (Nov 2022) compounded crypto weakness. Bitcoin hit cycle lows near $15K as contagion spread through the industry.'
+                }
+            ];
+            
+            // Filter to periods where we have BTC data
+            const btcStartDate = allData.btc ? allData.btc[0].date : '2014-01-01';
+            return knownPeriods.filter(p => p.startDate >= btcStartDate);
+        }
+        
+        // Name stress periods
+        function nameStressPeriod(period) {
+            // If period already has a name, use it
+            if (period.name) {
+                const emojiMap = {
+                    'China Devaluation': '🇨🇳',
+                    'Growth Scare': '😰',
+                    'Q4 2018 Selloff': '📊',
+                    'COVID Crash': '🦠',
+                    'Fed Tightening 2022': '📉',
+                    'Q4 2022 Selloff': '💥'
+                };
+                return { name: period.name, emoji: emojiMap[period.name] || '⚠️' };
+            }
+            
+            // Fallback to date-based naming
+            const date = new Date(period.troughDate);
+            const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            return { name: `${monthName} Correction`, emoji: '⚠️' };
+        }
+        
+        // ============================================
+        // VISUALIZATION
+        // ============================================
+        
+        // Render price overlay chart
+        function renderPriceChart() {
+            if (!allData.btc) {
+                console.error('Missing BTC data for price chart');
+                return;
+            }
+            
+            // Clear loading state
+            const chartDiv = document.getElementById('price-chart');
+            if (chartDiv.querySelector('.loading')) {
+                chartDiv.innerHTML = '';
+            }
+            
+            const traces = [];
+            
+            // Use selected period start date
+            const startDate = getPeriodStartDate(selectedPeriod);
+            
+            // Add BTC trace (use orange color)
+            const btcFiltered = allData.btc.filter(d => d.date >= startDate);
+            if (btcFiltered.length > 0) {
+                // Set shared date range for both charts
+                sharedDateRange.start = btcFiltered[0].date;
+                sharedDateRange.end = btcFiltered[btcFiltered.length - 1].date;
+                
+                const btcBase = btcFiltered[0].price;
+                traces.push({
+                    x: btcFiltered.map(d => d.date),
+                    y: btcFiltered.map(d => (d.price / btcBase) * 100),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'BTC',
+                    line: { color: '#f7931a', width: 2.5 },
+                    hovertemplate: 'BTC: %{y:.1f}<extra></extra>',
+                    hoverlabel: { bgcolor: '#1a1a2e', bordercolor: '#3a3a4a', font: { color: '#fff' } }
+                });
+            }
+            
+            // Add macro asset traces
+            for (const [asset, color] of Object.entries(ASSET_COLORS)) {
+                if (!allData[asset]) continue;
+                
+                const assetFiltered = allData[asset].filter(d => d.date >= startDate);
+                if (assetFiltered.length === 0) continue;
+                
+                const assetBase = assetFiltered[0].price;
+                traces.push({
+                    x: assetFiltered.map(d => d.date),
+                    y: assetFiltered.map(d => (d.price / assetBase) * 100),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: SYMBOLS[asset],
+                    line: { color: color, width: 1.5 },
+                    hovertemplate: `${SYMBOLS[asset]}: %{y:.1f}<extra></extra>`,
+                    hoverlabel: { bgcolor: '#1a1a2e', bordercolor: '#3a3a4a', font: { color: '#fff' } }
+                });
+            }
+            
+            // Add stress period shading (only for periods in view)
+            const shapes = [];
+            for (let i = 0; i < stressPeriods.length; i++) {
+                const period = stressPeriods[i];
+                if (period.endDate < startDate) continue;
+                
+                const x0 = period.startDate < startDate ? startDate : period.startDate;
+                const x1 = period.endDate;
+                
+                shapes.push({
+                    type: 'rect',
+                    xref: 'x',
+                    yref: 'paper',
+                    x0: x0,
+                    x1: x1,
+                    y0: 0,
+                    y1: 1,
+                    fillcolor: 'rgba(239, 68, 68, 0.12)',
+                    line: { width: 0 }
+                });
+            }
+            
+            // Add 100 baseline
+            const allDates = traces[0]?.x || [];
+            if (allDates.length > 0) {
+                traces.push({
+                    x: [allDates[0], allDates[allDates.length - 1]],
+                    y: [100, 100],
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: 'rgba(255,255,255,0.2)', width: 1, dash: 'dash' },
+                    showlegend: false,
+                    hoverinfo: 'skip'
+                });
+            }
+            
+            const layout = {
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { family: 'Space Grotesk', color: '#a0a0b0' },
-                margin: { t: 10, r: 30, b: 40, l: 80 },
-                xaxis: { gridcolor: '#2a2a3a' },
-                yaxis: { 
+                font: { family: 'Space Grotesk', color: '#a0a0b0', size: 11 },
+                margin: { t: 20, r: 30, b: 50, l: 60 },
+                shapes: shapes,
+                xaxis: {
+                    gridcolor: '#2a2a3a',
+                    tickformat: '%b %Y',
+                    tickfont: { size: 10 },
+                    range: [sharedDateRange.start, sharedDateRange.end],
+                    showspikes: true,
+                    spikemode: 'across',
+                    spikesnap: 'cursor',
+                    spikecolor: 'rgba(255,255,255,0.12)',
+                    spikethickness: 1,
+                    spikedash: 'dashdot'
+                },
+                yaxis: {
                     gridcolor: '#2a2a3a',
                     type: 'log',
-                    title: 'Price ($)'
+                    title: { text: 'Normalized Price (100 = Start)', font: { size: 10 } },
+                    tickfont: { size: 10 },
+                    showspikes: true,
+                    spikemode: 'across',
+                    spikesnap: 'cursor',
+                    spikecolor: 'rgba(255,255,255,0.12)',
+                    spikethickness: 1,
+                    spikedash: 'dashdot'
                 },
-                shapes: [...bullAreas, ...bearAreas].slice(0, 100), // Limit shapes
-                showlegend: false
-            }, { responsive: true });
-        }
-        
-        function updateVolatilityBars(volByRegime) {
-            const maxVol = Math.max(volByRegime.bull, volByRegime.bear, volByRegime.sideways, volByRegime.overall);
-            
-            ['bull', 'bear', 'sideways', 'overall'].forEach(regime => {
-                const pct = (volByRegime[regime] / maxVol) * 100;
-                document.getElementById('vol-' + regime).style.height = pct + '%';
-                document.getElementById('vol-' + regime + '-val').textContent = formatPercent(volByRegime[regime], 0);
-            });
-        }
-        
-        function updateVolatilityChart(data, rollingVol, regimes) {
-            const trace = {
-                x: rollingVol.map(v => v.date),
-                y: rollingVol.map(v => v.vol),
-                type: 'scatter',
-                mode: 'lines',
-                fill: 'tozeroy',
-                fillcolor: 'rgba(168, 85, 247, 0.2)',
-                line: { color: CHART_COLORS.jump, width: 1 },
-                name: 'Annualized Vol'
+                showlegend: false,
+                hovermode: 'x unified',
+                spikedistance: -1,
+                hoverlabel: {
+                    bgcolor: '#1a1a2e',
+                    bordercolor: '#3a3a4a',
+                    font: { color: '#ffffff', size: 12 }
+                }
             };
             
-            Plotly.react('vol-chart', [trace], {
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { family: 'Space Grotesk', color: '#a0a0b0' },
-                margin: { t: 10, r: 30, b: 40, l: 60 },
-                xaxis: { gridcolor: '#2a2a3a' },
-                yaxis: { 
-                    gridcolor: '#2a2a3a',
-                    ticksuffix: '%',
-                    title: 'Volatility'
-                },
-                showlegend: false
-            }, { responsive: true });
+            const config = { displayModeBar: false, responsive: true };
             
-            // Update context
-            const avgVol = mean(rollingVol.map(v => v.vol));
-            document.getElementById('vol-context').innerHTML = 
-                `Average annualized volatility: <b>${formatPercent(avgVol, 1)}</b>. ` +
-                `Bear markets show <b>${formatPercent(regimeResults.volByRegime.bear / regimeResults.volByRegime.bull * 100 - 100, 0)}</b> higher volatility than bull markets on average.`;
-        }
-        
-        // Initialize sliders
-        document.querySelectorAll('input[type="range"]').forEach(slider => {
-            slider.addEventListener('input', function() {
-                const valEl = document.getElementById('val-' + this.id);
-                if (valEl) {
-                    if (this.id === 'window' || this.id === 'vol-window') {
-                        valEl.textContent = this.value + ' days';
-                    } else if (this.id === 'bull' || this.id === 'bear') {
-                        valEl.textContent = this.value + '%';
+            Plotly.newPlot('price-chart', traces, layout, config);
+            
+            // Helper to find stress period index by date
+            function findStressPeriodByDate(date) {
+                for (let i = 0; i < stressPeriods.length; i++) {
+                    const period = stressPeriods[i];
+                    if (date >= period.startDate && date <= period.endDate) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+            
+            // Track currently highlighted shape
+            let priceChartHighlightedShape = -1;
+            
+            // Add hover handler to highlight stress zones
+            document.getElementById('price-chart').on('plotly_hover', function(data) {
+                const hoveredDate = data.points[0].x;
+                const periodIndex = findStressPeriodByDate(hoveredDate);
+                
+                if (periodIndex >= 0 && periodIndex !== priceChartHighlightedShape) {
+                    // Update shape to glow
+                    const updates = {};
+                    updates['shapes[' + periodIndex + '].fillcolor'] = 'rgba(239, 68, 68, 0.35)';
+                    updates['shapes[' + periodIndex + '].line.width'] = 2;
+                    updates['shapes[' + periodIndex + '].line.color'] = 'rgba(239, 68, 68, 0.8)';
+                    Plotly.relayout('price-chart', updates);
+                    priceChartHighlightedShape = periodIndex;
+                }
+            });
+            
+            document.getElementById('price-chart').on('plotly_unhover', function() {
+                if (priceChartHighlightedShape >= 0) {
+                    const updates = {};
+                    updates['shapes[' + priceChartHighlightedShape + '].fillcolor'] = 'rgba(239, 68, 68, 0.12)';
+                    updates['shapes[' + priceChartHighlightedShape + '].line.width'] = 0;
+                    Plotly.relayout('price-chart', updates);
+                    priceChartHighlightedShape = -1;
+                }
+            });
+            
+            // Add click handler - detect clicks on stress period zones by x position
+            document.getElementById('price-chart').on('plotly_click', function(data) {
+                const clickedDate = data.points[0].x;
+                const periodIndex = findStressPeriodByDate(clickedDate);
+                
+                if (periodIndex >= 0) {
+                    const card = document.querySelector(`.stress-card[data-index="${periodIndex}"]`);
+                    if (card) {
+                        document.querySelectorAll('.stress-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        
+                        card.style.boxShadow = '0 0 30px rgba(239, 68, 68, 0.6)';
+                        setTimeout(() => { card.style.boxShadow = ''; }, 1000);
+                        
+                        showStressDetail(periodIndex);
+                        setTimeout(() => {
+                            document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 100);
                     }
                 }
             });
-        });
+        }
         
-        // Auto-run on load
-        setTimeout(runRegimeAnalysis, 500);
+        // Render main correlation chart
+        function renderCorrelationChart() {
+            if (!allData.btc || !allData.spy) {
+                console.error('Missing required data');
+                return;
+            }
+            
+            // Clear loading state
+            const chartDiv = document.getElementById('correlation-chart');
+            if (chartDiv.querySelector('.loading')) {
+                chartDiv.innerHTML = '';
+            }
+            
+            const traces = [];
+            
+            // Filter data to selected period
+            const startDate = getPeriodStartDate(selectedPeriod);
+            const filteredBtc = allData.btc.filter(d => d.date >= startDate);
+            
+            // Calculate rolling correlations for each asset
+            for (const [asset, color] of Object.entries(ASSET_COLORS)) {
+                if (!allData[asset]) continue;
+                
+                const filteredAsset = allData[asset].filter(d => d.date >= startDate);
+                const { correlations, dates } = rollingCorrelation(filteredBtc, filteredAsset, correlationWindow);
+                
+                traces.push({
+                    x: dates,
+                    y: correlations,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: ASSET_NAMES[asset],
+                    line: { color: color, width: 2 },
+                    hovertemplate: `${ASSET_NAMES[asset]}: %{y:.2f}<extra></extra>`,
+                    hoverlabel: { bgcolor: '#1a1a2e', bordercolor: '#3a3a4a', font: { color: '#fff' } }
+                });
+            }
+            
+            // Add stress period shading (only for periods in view)
+            const shapes = [];
+            for (let i = 0; i < stressPeriods.length; i++) {
+                const period = stressPeriods[i];
+                
+                // Only show stress periods that fall within selected time frame
+                if (period.endDate < startDate) continue;
+                
+                const x0 = period.startDate < startDate ? startDate : period.startDate;
+                const x1 = period.endDate;
+                
+                shapes.push({
+                    type: 'rect',
+                    xref: 'x',
+                    yref: 'paper',
+                    x0: x0,
+                    x1: x1,
+                    y0: 0,
+                    y1: 1,
+                    fillcolor: 'rgba(239, 68, 68, 0.15)',
+                    line: { width: 1, color: 'rgba(239, 68, 68, 0.3)' }
+                });
+            }
+            
+            // Zero line
+            const allDates = traces[0]?.x || [];
+            if (allDates.length > 0) {
+                traces.push({
+                    x: [allDates[0], allDates[allDates.length - 1]],
+                    y: [0, 0],
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: 'rgba(255,255,255,0.3)', width: 1, dash: 'dash' },
+                    showlegend: false,
+                    hoverinfo: 'skip'
+                });
+            }
+            
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Space Grotesk', color: '#a0a0b0', size: 11 },
+                margin: { t: 40, r: 30, b: 50, l: 60 },
+                shapes: shapes,
+                xaxis: {
+                    gridcolor: '#2a2a3a',
+                    tickformat: '%b %Y',
+                    tickfont: { size: 10 },
+                    range: [sharedDateRange.start, sharedDateRange.end],
+                    showspikes: true,
+                    spikemode: 'across',
+                    spikesnap: 'cursor',
+                    spikecolor: 'rgba(255,255,255,0.12)',
+                    spikethickness: 1,
+                    spikedash: 'dashdot'
+                },
+                yaxis: {
+                    gridcolor: '#2a2a3a',
+                    title: { text: 'Correlation with BTC', font: { size: 10 } },
+                    tickfont: { size: 10 },
+                    range: [-1, 1],
+                    dtick: 0.25,
+                    showspikes: true,
+                    spikemode: 'across',
+                    spikesnap: 'cursor',
+                    spikecolor: 'rgba(255,255,255,0.12)',
+                    spikethickness: 1,
+                    spikedash: 'dashdot'
+                },
+                showlegend: false,
+                hovermode: 'x unified',
+                spikedistance: -1,
+                hoverlabel: {
+                    bgcolor: '#1a1a2e',
+                    bordercolor: '#3a3a4a',
+                    font: { color: '#ffffff', size: 12 }
+                }
+            };
+            
+            const config = { displayModeBar: false, responsive: true };
+            
+            Plotly.newPlot('correlation-chart', traces, layout, config);
+            
+            // Track currently highlighted shape
+            let corrChartHighlightedShape = -1;
+            
+            // Add hover handler to highlight stress zones
+            document.getElementById('correlation-chart').on('plotly_hover', function(data) {
+                const hoveredDate = data.points[0].x;
+                
+                // Find which stress period this date falls in
+                let periodIndex = -1;
+                for (let i = 0; i < stressPeriods.length; i++) {
+                    const period = stressPeriods[i];
+                    if (hoveredDate >= period.startDate && hoveredDate <= period.endDate) {
+                        periodIndex = i;
+                        break;
+                    }
+                }
+                
+                if (periodIndex >= 0 && periodIndex !== corrChartHighlightedShape) {
+                    const updates = {};
+                    updates['shapes[' + periodIndex + '].fillcolor'] = 'rgba(239, 68, 68, 0.4)';
+                    updates['shapes[' + periodIndex + '].line.width'] = 2;
+                    updates['shapes[' + periodIndex + '].line.color'] = 'rgba(239, 68, 68, 0.8)';
+                    Plotly.relayout('correlation-chart', updates);
+                    corrChartHighlightedShape = periodIndex;
+                }
+            });
+            
+            document.getElementById('correlation-chart').on('plotly_unhover', function() {
+                if (corrChartHighlightedShape >= 0) {
+                    const updates = {};
+                    updates['shapes[' + corrChartHighlightedShape + '].fillcolor'] = 'rgba(239, 68, 68, 0.15)';
+                    updates['shapes[' + corrChartHighlightedShape + '].line.width'] = 1;
+                    updates['shapes[' + corrChartHighlightedShape + '].line.color'] = 'rgba(239, 68, 68, 0.3)';
+                    Plotly.relayout('correlation-chart', updates);
+                    corrChartHighlightedShape = -1;
+                }
+            });
+            
+            // Add click handler - detect clicks on stress period zones by x position
+            document.getElementById('correlation-chart').on('plotly_click', function(data) {
+                const clickedDate = data.points[0].x;
+                
+                for (let i = 0; i < stressPeriods.length; i++) {
+                    const period = stressPeriods[i];
+                    if (clickedDate >= period.startDate && clickedDate <= period.endDate) {
+                        const card = document.querySelector(`.stress-card[data-index="${i}"]`);
+                        if (card) {
+                            document.querySelectorAll('.stress-card').forEach(c => c.classList.remove('selected'));
+                            card.classList.add('selected');
+                            
+                            card.style.boxShadow = '0 0 30px rgba(239, 68, 68, 0.6)';
+                            setTimeout(() => { card.style.boxShadow = ''; }, 1000);
+                            
+                            showStressDetail(i);
+                            setTimeout(() => {
+                                document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 100);
+                        }
+                        break;
+                    }
+                }
+            });
+        }
+        
+        // Render stress period cards
+        function renderStressPeriods() {
+            const container = document.getElementById('stress-grid');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < stressPeriods.length; i++) {
+                const period = stressPeriods[i];
+                const { name, emoji } = nameStressPeriod(period);
+                
+                // Calculate correlations during this period
+                const periodCorrs = {};
+                for (const asset of Object.keys(ASSET_COLORS)) {
+                    if (allData[asset]) {
+                        const filtered = filterDataToPeriod(allData.btc, allData[asset], period.startDate, period.endDate);
+                        if (filtered.btc.length > 10) {
+                            const btcReturns = calculateReturns(filtered.btc);
+                            const assetReturns = calculateReturns(filtered.asset);
+                            periodCorrs[asset] = correlation(btcReturns, assetReturns);
+                        }
+                    }
+                }
+                
+                const spyCorr = periodCorrs.spy || 0;
+                const corrClass = spyCorr > 0.3 ? 'negative' : spyCorr < -0.1 ? 'positive' : 'neutral';
+                
+                const card = document.createElement('div');
+                card.className = 'stress-card';
+                card.dataset.index = i;
+                card.innerHTML = `
+                    <div class="stress-header">
+                        <div>
+                            <div class="stress-name">${emoji} ${name}</div>
+                            <div class="stress-dates">${period.startDate} → ${period.troughDate}</div>
+                        </div>
+                        <div class="stress-badge">${(period.maxDrawdown * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="stress-stats">
+                        <div class="stress-stat">
+                            <div class="stress-stat-value ${corrClass}">${spyCorr !== null ? spyCorr.toFixed(2) : '—'}</div>
+                            <div class="stress-stat-label">BTC-SPY Corr</div>
+                        </div>
+                        <div class="stress-stat">
+                            <div class="stress-stat-value">${periodCorrs.gld !== null ? periodCorrs.gld.toFixed(2) : '—'}</div>
+                            <div class="stress-stat-label">BTC-GLD Corr</div>
+                        </div>
+                        <div class="stress-stat">
+                            <div class="stress-stat-value">${periodCorrs.tlt !== null ? periodCorrs.tlt.toFixed(2) : '—'}</div>
+                            <div class="stress-stat-label">BTC-TLT Corr</div>
+                        </div>
+                        <div class="stress-stat">
+                            <div class="stress-stat-value">${periodCorrs.uup !== null ? periodCorrs.uup.toFixed(2) : '—'}</div>
+                            <div class="stress-stat-label">BTC-UUP Corr</div>
+                        </div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    showStressDetail(i);
+                    setTimeout(() => {
+                        document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                });
+                container.appendChild(card);
+            }
+        }
+        
+        // Filter data to period
+        function filterDataToPeriod(btcData, assetData, startDate, endDate) {
+            const assetMap = new Map(assetData.map(d => [d.date, d.price]));
+            const btcFiltered = [];
+            const assetFiltered = [];
+            
+            for (const d of btcData) {
+                if (d.date >= startDate && d.date <= endDate && assetMap.has(d.date)) {
+                    btcFiltered.push(d.price);
+                    assetFiltered.push(assetMap.get(d.date));
+                }
+            }
+            
+            return { btc: btcFiltered, asset: assetFiltered };
+        }
+        
+        // Show stress period detail
+        function showStressDetail(index) {
+            const period = stressPeriods[index];
+            const { name, emoji } = nameStressPeriod(period);
+            
+            // Update selection
+            document.querySelectorAll('.stress-card').forEach(c => c.classList.remove('selected'));
+            document.querySelector(`.stress-card[data-index="${index}"]`).classList.add('selected');
+            
+            // Show panel
+            const panel = document.getElementById('detail-panel');
+            panel.classList.add('visible');
+            document.getElementById('detail-title').textContent = `${emoji} ${name} — ${period.startDate} to ${period.endDate}`;
+            
+            // Display context if available
+            const contextEl = document.getElementById('detail-context');
+            if (period.context) {
+                contextEl.innerHTML = `📋 <strong>What happened:</strong> ${period.context}`;
+                contextEl.style.display = 'block';
+            } else {
+                contextEl.style.display = 'none';
+            }
+            
+            // Calculate detailed correlations
+            const correlations = {};
+            const returns = {};
+            
+            for (const asset of Object.keys(ASSET_COLORS)) {
+                if (allData[asset]) {
+                    const filtered = filterDataToPeriod(allData.btc, allData[asset], period.startDate, period.endDate);
+                    if (filtered.btc.length > 5) {
+                        const btcRet = calculateReturns(filtered.btc);
+                        const assetRet = calculateReturns(filtered.asset);
+                        correlations[asset] = correlation(btcRet, assetRet);
+                        
+                        // Total return
+                        const btcTotalRet = (filtered.btc[filtered.btc.length-1] / filtered.btc[0] - 1) * 100;
+                        const assetTotalRet = (filtered.asset[filtered.asset.length-1] / filtered.asset[0] - 1) * 100;
+                        returns[asset] = { btc: btcTotalRet, asset: assetTotalRet };
+                    }
+                }
+            }
+            
+            // Render correlation matrix
+            let matrixHTML = '';
+            for (const [asset, corr] of Object.entries(correlations)) {
+                if (corr === null) continue;
+                const barWidth = Math.abs(corr) * 50;
+                const barClass = corr >= 0 ? 'positive' : 'negative';
+                const valueClass = corr > 0.3 ? 'negative' : corr < -0.1 ? 'positive' : 'neutral';
+                
+                matrixHTML += `
+                    <div class="corr-row">
+                        <div class="corr-asset">${SYMBOLS[asset]}</div>
+                        <div class="corr-bar-container">
+                            <div class="corr-center-line"></div>
+                            <div class="corr-bar ${barClass}" style="width: ${barWidth}%;"></div>
+                        </div>
+                        <div class="corr-value ${valueClass}">${corr >= 0 ? '+' : ''}${corr.toFixed(2)}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('corr-matrix-content').innerHTML = matrixHTML;
+            
+            // Generate insights
+            let insightsHTML = '';
+            
+            const spyCorr = correlations.spy || 0;
+            const gldCorr = correlations.gld || 0;
+            
+            if (spyCorr > 0.5) {
+                insightsHTML += `
+                    <div class="insight-item">
+                        <span class="insight-icon">🔗</span>
+                        <div class="insight-text"><strong>High equity correlation (${spyCorr.toFixed(2)})</strong> — BTC traded as a risk asset during this stress. No diversification benefit.</div>
+                    </div>
+                `;
+            } else if (spyCorr < 0.2) {
+                insightsHTML += `
+                    <div class="insight-item">
+                        <span class="insight-icon">🛡️</span>
+                        <div class="insight-text"><strong>Low equity correlation (${spyCorr.toFixed(2)})</strong> — BTC showed independence from equities during this period.</div>
+                    </div>
+                `;
+            }
+            
+            if (gldCorr > 0.3) {
+                insightsHTML += `
+                    <div class="insight-item">
+                        <span class="insight-icon">🥇</span>
+                        <div class="insight-text"><strong>Gold-like behavior (${gldCorr.toFixed(2)})</strong> — BTC moved with gold, supporting the "digital gold" thesis.</div>
+                    </div>
+                `;
+            }
+            
+            if (returns.spy) {
+                const btcRet = returns.spy.btc;
+                const spyRet = returns.spy.asset;
+                if (btcRet < spyRet * 2) {
+                    insightsHTML += `
+                        <div class="insight-item">
+                            <span class="insight-icon">📉</span>
+                            <div class="insight-text">BTC fell <strong>${Math.abs(btcRet).toFixed(1)}%</strong> vs SPY's <strong>${Math.abs(spyRet).toFixed(1)}%</strong> — amplified losses typical of high-beta assets.</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            if (correlations.uup && correlations.uup < -0.2) {
+                insightsHTML += `
+                    <div class="insight-item">
+                        <span class="insight-icon">💵</span>
+                        <div class="insight-text"><strong>Inverse dollar relationship</strong> — BTC weakened as the dollar strengthened (typical risk-off pattern).</div>
+                    </div>
+                `;
+            }
+            
+            if (!insightsHTML) {
+                insightsHTML = `
+                    <div class="insight-item">
+                        <span class="insight-icon">📊</span>
+                        <div class="insight-text">Mixed signals during this period — correlations were moderate across asset classes.</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('insights-content').innerHTML = insightsHTML;
+            
+            // Render detail chart (normalized prices during period)
+            renderDetailChart(period);
+        }
+        
+        // Render detail chart
+        function renderDetailChart(period) {
+            const traces = [];
+            
+            // Get BTC prices for period
+            const btcPeriod = allData.btc.filter(d => d.date >= period.startDate && d.date <= period.endDate);
+            if (btcPeriod.length === 0) return;
+            
+            const btcBase = btcPeriod[0].price;
+            traces.push({
+                x: btcPeriod.map(d => d.date),
+                y: btcPeriod.map(d => (d.price / btcBase - 1) * 100),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'BTC',
+                line: { color: '#f7931a', width: 3 }
+            });
+            
+            // Add other assets
+            for (const [asset, color] of Object.entries(ASSET_COLORS)) {
+                if (!allData[asset]) continue;
+                
+                const assetPeriod = allData[asset].filter(d => d.date >= period.startDate && d.date <= period.endDate);
+                if (assetPeriod.length === 0) continue;
+                
+                const assetBase = assetPeriod[0].price;
+                traces.push({
+                    x: assetPeriod.map(d => d.date),
+                    y: assetPeriod.map(d => (d.price / assetBase - 1) * 100),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: SYMBOLS[asset],
+                    line: { color: color, width: 2 }
+                });
+            }
+            
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Space Grotesk', color: '#a0a0b0', size: 11 },
+                margin: { t: 30, r: 30, b: 40, l: 50 },
+                title: { text: 'Normalized Performance (% Change)', font: { size: 12 }, x: 0 },
+                xaxis: {
+                    gridcolor: '#2a2a3a',
+                    tickformat: '%b %d',
+                    tickfont: { size: 10 }
+                },
+                yaxis: {
+                    gridcolor: '#2a2a3a',
+                    title: { text: '% Change', font: { size: 10 } },
+                    tickfont: { size: 10 },
+                    ticksuffix: '%'
+                },
+                legend: { orientation: 'h', y: 1.1 },
+                hovermode: 'x unified'
+            };
+            
+            Plotly.newPlot('detail-chart', traces, layout, { displayModeBar: false, responsive: true });
+        }
+        
+        // Close detail panel
+        function closeDetailPanel() {
+            document.getElementById('detail-panel').classList.remove('visible');
+            document.querySelectorAll('.stress-card').forEach(c => c.classList.remove('selected'));
+        }
+        
+        // Render summary stats
+        function renderSummary() {
+            const container = document.getElementById('summary-grid');
+            
+            // Calculate overall correlations
+            const overallCorrs = {};
+            for (const asset of Object.keys(ASSET_COLORS)) {
+                if (allData[asset] && allData.btc) {
+                    const { correlations } = rollingCorrelation(allData.btc, allData[asset], 90);
+                    const validCorrs = correlations.filter(c => c !== null);
+                    if (validCorrs.length > 0) {
+                        overallCorrs[asset] = {
+                            current: validCorrs[validCorrs.length - 1],
+                            average: validCorrs.reduce((a, b) => a + b, 0) / validCorrs.length,
+                            max: Math.max(...validCorrs),
+                            min: Math.min(...validCorrs)
+                        };
+                    }
+                }
+            }
+            
+            let html = '';
+            for (const [asset, stats] of Object.entries(overallCorrs)) {
+                const currentClass = stats.current > 0.3 ? 'negative' : stats.current < -0.1 ? 'positive' : 'neutral';
+                
+                html += `
+                    <div class="stress-card" style="cursor: default; border-left-color: ${ASSET_COLORS[asset]};">
+                        <div class="stress-header">
+                            <div>
+                                <div class="stress-name">${ASSET_NAMES[asset]}</div>
+                                <div class="stress-dates">90-day rolling correlation</div>
+                            </div>
+                        </div>
+                        <div class="stress-stats">
+                            <div class="stress-stat">
+                                <div class="stress-stat-value ${currentClass}">${stats.current.toFixed(2)}</div>
+                                <div class="stress-stat-label">Current</div>
+                            </div>
+                            <div class="stress-stat">
+                                <div class="stress-stat-value">${stats.average.toFixed(2)}</div>
+                                <div class="stress-stat-label">Average</div>
+                            </div>
+                            <div class="stress-stat">
+                                <div class="stress-stat-value">${stats.max.toFixed(2)}</div>
+                                <div class="stress-stat-label">Max</div>
+                            </div>
+                            <div class="stress-stat">
+                                <div class="stress-stat-value">${stats.min.toFixed(2)}</div>
+                                <div class="stress-stat-label">Min</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Time frame selector (affects both charts)
+            document.querySelectorAll('#timeframe-selector .toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#timeframe-selector .toggle-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedPeriod = btn.dataset.period;
+                    renderPriceChart();
+                    renderCorrelationChart();
+                });
+            });
+            
+            // Rolling window toggle (only affects correlation chart)
+            document.querySelectorAll('.toggle-btn[data-window]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.toggle-btn[data-window]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    correlationWindow = parseInt(btn.dataset.window);
+                    renderCorrelationChart();
+                });
+            });
+        }
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        
+        async function init() {
+            console.log('[Regimes] Initializing...');
+            
+            setupEventListeners();
+            
+            const success = await loadAllData();
+            
+            if (!success) {
+                document.getElementById('correlation-chart').innerHTML = `
+                    <div style="color: #ff4757; padding: 40px; text-align: center;">
+                        Failed to load market data. Please refresh and try again.
+                    </div>
+                `;
+                return;
+            }
+            
+            // Detect stress periods from SPY
+            if (allData.spy) {
+                stressPeriods = detectStressPeriods(allData.spy, -0.10);
+                console.log(`[Regimes] Detected ${stressPeriods.length} stress periods`);
+            }
+            
+            // Render everything
+            renderPriceChart();
+            renderCorrelationChart();
+            renderStressPeriods();
+            renderSummary();
+        }
+        
+        // Start
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 </body>
 </html>
-
