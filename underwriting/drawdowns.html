@@ -896,11 +896,11 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             console.log('[Drawdowns] Initializing...');
-            console.log('[Drawdowns] BTC_RAW_DATA available:', typeof window.BTC_RAW_DATA !== 'undefined');
-            console.log('[Drawdowns] Data length:', window.BTC_RAW_DATA ? window.BTC_RAW_DATA.length : 0);
+            console.log('[Drawdowns] BTC_PRICES available:', typeof window.BTC_PRICES !== 'undefined');
+            console.log('[Drawdowns] Data length:', window.BTC_PRICES ? window.BTC_PRICES.length : 0);
             
-            if (window.BTC_RAW_DATA && window.BTC_RAW_DATA.length > 100) {
-                console.log('[Drawdowns] Data range:', window.BTC_RAW_DATA[0].date, 'to', window.BTC_RAW_DATA[window.BTC_RAW_DATA.length-1].date);
+            if (window.BTC_PRICES && window.BTC_PRICES.length > 100) {
+                console.log('[Drawdowns] Data range:', window.BTC_PRICES[0].date, 'to', window.BTC_PRICES[window.BTC_PRICES.length-1].date);
                 renderMainChart();
             } else {
                 console.error('[Drawdowns] BTC data not loaded');
@@ -912,7 +912,7 @@
 
         function renderMainChart() {
             // Get full BTC data from 2014
-            const data = window.BTC_RAW_DATA.filter(d => {
+            const data = window.BTC_PRICES.filter(d => {
                 const year = new Date(d.date).getFullYear();
                 return year >= 2014;
             });
@@ -1070,7 +1070,7 @@
         function renderZoomChart(event) {
             const [startDate, endDate] = event.chartRange;
             
-            const data = window.BTC_RAW_DATA.filter(d => {
+            const data = window.BTC_PRICES.filter(d => {
                 return d.date >= startDate && d.date <= endDate;
             });
             
