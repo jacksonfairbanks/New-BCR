@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAGE_TITLE | Underwriting Dashboard</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    
+    <!-- Shared Resources -->
+    <link rel="stylesheet" href="../css/base.css">
+    <script src="../js/btc-data.js"></script>
+    <script src="../js/utils.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Page-Specific Styles -->
+    <style>
+        /* ========== PAGE THEME ========== */
+        /* Override base colors for this page's theme */
+        .header__icon {
+            /* Choose: --orange, --red, --blue, --purple */
+            background: linear-gradient(135deg, var(--accent-orange), #e8850f);
+            border-radius: 50%;
+        }
+        
+        /* ========== PAGE-SPECIFIC STYLES ========== */
+        /* Add styles specific to this page here */
+        
+    </style>
+</head>
+<body>
+    <!-- Background Pattern -->
+    <div class="bg-pattern bg-pattern--orange"></div>
+    
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__logo">
+                <div class="header__icon">₿</div>
+                <div>
+                    <h1 class="header__title">PAGE_TITLE</h1>
+                    <p class="header__subtitle">Brief description of this page</p>
+                </div>
+            </div>
+            <nav class="header__nav">
+                <a href="../index.html" class="btn btn--ghost">← Dashboard</a>
+            </nav>
+        </header>
+        
+        <!-- Main Layout: Sidebar + Content -->
+        <div class="grid-2col">
+            <!-- Sidebar / Control Panel -->
+            <aside class="sidebar">
+                <div class="card__title">Controls</div>
+                
+                <!-- Example Slider -->
+                <div class="sidebar__section">
+                    <div class="slider-group">
+                        <div class="slider-group__header">
+                            <span class="slider-group__label">Parameter Name</span>
+                            <span class="slider-group__value" id="param-value">50</span>
+                        </div>
+                        <input type="range" id="param-slider" min="0" max="100" value="50">
+                    </div>
+                </div>
+                
+                <!-- Example Dropdown -->
+                <div class="sidebar__section">
+                    <label class="sidebar__label">Select Option</label>
+                    <select id="option-select">
+                        <option value="a">Option A</option>
+                        <option value="b">Option B</option>
+                        <option value="c">Option C</option>
+                    </select>
+                </div>
+                
+                <!-- Run Button -->
+                <div class="sidebar__section">
+                    <button class="btn btn--primary" style="width: 100%;" id="run-btn">
+                        ▶ Run Analysis
+                    </button>
+                </div>
+            </aside>
+            
+            <!-- Main Content Area -->
+            <main>
+                <!-- Stats Grid -->
+                <div class="grid-4col mb-md">
+                    <div class="stat-card">
+                        <div class="stat-card__label">Metric 1</div>
+                        <div class="stat-card__value stat-card__value--orange" id="stat-1">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card__label">Metric 2</div>
+                        <div class="stat-card__value stat-card__value--green" id="stat-2">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card__label">Metric 3</div>
+                        <div class="stat-card__value stat-card__value--blue" id="stat-3">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card__label">Metric 4</div>
+                        <div class="stat-card__value stat-card__value--purple" id="stat-4">—</div>
+                    </div>
+                </div>
+                
+                <!-- Main Chart -->
+                <div class="chart-container">
+                    <div class="chart-container__header">
+                        <div>
+                            <h3 class="chart-container__title">Main Chart Title</h3>
+                            <p class="chart-container__subtitle">Chart description or context</p>
+                        </div>
+                    </div>
+                    <div id="main-chart" style="height: 400px;"></div>
+                </div>
+                
+                <!-- Secondary Chart (Optional) -->
+                <div class="chart-container">
+                    <div class="chart-container__header">
+                        <h3 class="chart-container__title">Secondary Chart</h3>
+                    </div>
+                    <div id="secondary-chart" style="height: 300px;"></div>
+                </div>
+                
+                <!-- Data Table (Collapsible) -->
+                <div class="collapsible">
+                    <div class="collapsible__header" onclick="Utils.toggleCollapsible(this)">
+                        <span>Detailed Data Table</span>
+                    </div>
+                    <div class="collapsible__content">
+                        <div class="collapsible__inner table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Column 1</th>
+                                        <th>Column 2</th>
+                                        <th>Column 3</th>
+                                        <th>Column 4</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="data-table-body">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: 0%"></div>
+        </div>
+    </div>
+    
+    <!-- Page Scripts -->
+    <script>
+        // ==================== CONFIGURATION ====================
+        const CONFIG = {
+            defaultParam: 50,
+            // Add page-specific config here
+        };
+        
+        // ==================== STATE ====================
+        let state = {
+            param: CONFIG.defaultParam,
+            data: [],
+            results: null
+        };
+        
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('[Page] Initializing...');
+            
+            // Wait for BTC data to load
+            if (window.BTC_PRICES && window.BTC_PRICES.length > 0) {
+                state.data = window.BTC_PRICES;
+                console.log(`[Page] Loaded ${state.data.length} data points`);
+            } else {
+                console.error('[Page] BTC data not available');
+            }
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Initial render
+            runAnalysis();
+        });
+        
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            // Slider
+            const slider = document.getElementById('param-slider');
+            const sliderValue = document.getElementById('param-value');
+            slider.addEventListener('input', () => {
+                state.param = parseInt(slider.value);
+                sliderValue.textContent = state.param;
+            });
+            
+            // Select
+            document.getElementById('option-select').addEventListener('change', (e) => {
+                console.log('Option changed:', e.target.value);
+            });
+            
+            // Run button
+            document.getElementById('run-btn').addEventListener('click', runAnalysis);
+        }
+        
+        // ==================== MAIN ANALYSIS ====================
+        async function runAnalysis() {
+            Utils.showLoading(true);
+            Utils.updateProgress(0);
+            
+            try {
+                // Simulate processing
+                await new Promise(r => setTimeout(r, 100));
+                Utils.updateProgress(30);
+                
+                // Run calculations
+                const results = calculate();
+                Utils.updateProgress(70);
+                
+                // Update UI
+                updateStats(results);
+                renderMainChart(results);
+                renderSecondaryChart(results);
+                updateTable(results);
+                
+                Utils.updateProgress(100);
+                state.results = results;
+                
+            } catch (error) {
+                console.error('[Page] Analysis error:', error);
+            } finally {
+                setTimeout(() => Utils.showLoading(false), 300);
+            }
+        }
+        
+        // ==================== CALCULATIONS ====================
+        function calculate() {
+            // Example calculation using BTC data
+            const prices = state.data.map(d => d.price);
+            
+            return {
+                metric1: Utils.mean(prices),
+                metric2: Utils.percentile(prices, 50),
+                metric3: Utils.min(prices),
+                metric4: Utils.max(prices),
+                timeSeries: state.data.slice(-365) // Last year
+            };
+        }
+        
+        // ==================== UI UPDATES ====================
+        function updateStats(results) {
+            document.getElementById('stat-1').textContent = Utils.formatDollar(results.metric1);
+            document.getElementById('stat-2').textContent = Utils.formatDollar(results.metric2);
+            document.getElementById('stat-3').textContent = Utils.formatDollar(results.metric3);
+            document.getElementById('stat-4').textContent = Utils.formatDollar(results.metric4);
+        }
+        
+        function renderMainChart(results) {
+            const data = results.timeSeries;
+            
+            const trace = {
+                x: data.map(d => d.date),
+                y: data.map(d => d.price),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'BTC Price',
+                line: { color: Utils.CHART_COLORS.orange, width: 2 }
+            };
+            
+            const layout = Utils.getChartLayout({
+                title: '',
+                xaxis: { ...Utils.CHART_LAYOUT_BASE.xaxis, title: 'Date' },
+                yaxis: { ...Utils.CHART_LAYOUT_BASE.yaxis, title: 'Price ($)', type: 'log' }
+            });
+            
+            Plotly.newPlot('main-chart', [trace], layout, { responsive: true });
+        }
+        
+        function renderSecondaryChart(results) {
+            // Example: histogram of returns
+            const returns = Utils.calculateLogReturns(results.timeSeries);
+            
+            const trace = {
+                x: returns.map(r => r * 100),
+                type: 'histogram',
+                nbinsx: 50,
+                marker: { color: Utils.CHART_COLORS.blue }
+            };
+            
+            const layout = Utils.getChartLayout({
+                xaxis: { ...Utils.CHART_LAYOUT_BASE.xaxis, title: 'Daily Return (%)' },
+                yaxis: { ...Utils.CHART_LAYOUT_BASE.yaxis, title: 'Frequency' },
+                showlegend: false
+            });
+            
+            Plotly.newPlot('secondary-chart', [trace], layout, { responsive: true });
+        }
+        
+        function updateTable(results) {
+            const tbody = document.getElementById('data-table-body');
+            const recentData = results.timeSeries.slice(-10).reverse();
+            
+            tbody.innerHTML = recentData.map(d => `
+                <tr>
+                    <td>${Utils.formatDateDisplay(d.date)}</td>
+                    <td>${Utils.formatCurrency(d.price)}</td>
+                    <td>—</td>
+                    <td>—</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
+
