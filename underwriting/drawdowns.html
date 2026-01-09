@@ -141,6 +141,88 @@
             width: 100%;
         }
         
+        /* Clickable zone overlays */
+        .chart-wrapper {
+            position: relative;
+        }
+        
+        .zone-overlay {
+            position: absolute;
+            top: 30px;
+            bottom: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+            border-radius: 4px;
+        }
+        
+        .zone-overlay::before {
+            content: 'Click for insights';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        
+        .zone-overlay:hover::before {
+            opacity: 1;
+        }
+        
+        .zone-overlay:hover {
+            animation: zonePulse 1.5s ease-in-out infinite;
+        }
+        
+        .zone-2014 {
+            background: rgba(255, 71, 87, 0.05);
+            border: 2px solid transparent;
+        }
+        .zone-2014:hover {
+            background: rgba(255, 71, 87, 0.25);
+            border-color: rgba(255, 71, 87, 0.6);
+            box-shadow: 0 0 30px rgba(255, 71, 87, 0.4), inset 0 0 30px rgba(255, 71, 87, 0.1);
+        }
+        .zone-2014::before { color: #ff4757; }
+        
+        .zone-2018 {
+            background: rgba(168, 85, 247, 0.05);
+            border: 2px solid transparent;
+        }
+        .zone-2018:hover {
+            background: rgba(168, 85, 247, 0.25);
+            border-color: rgba(168, 85, 247, 0.6);
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.4), inset 0 0 30px rgba(168, 85, 247, 0.1);
+        }
+        .zone-2018::before { color: #a855f7; }
+        
+        .zone-2022 {
+            background: rgba(74, 158, 255, 0.05);
+            border: 2px solid transparent;
+        }
+        .zone-2022:hover {
+            background: rgba(74, 158, 255, 0.25);
+            border-color: rgba(74, 158, 255, 0.6);
+            box-shadow: 0 0 30px rgba(74, 158, 255, 0.4), inset 0 0 30px rgba(74, 158, 255, 0.1);
+        }
+        .zone-2022::before { color: #4a9eff; }
+        
+        @keyframes zonePulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
         /* Drawdown selector cards */
         .drawdown-selector {
             display: grid;
@@ -622,7 +704,13 @@
                 <div class="chart-title">Bitcoin Price History (2014–2025)</div>
                 <div class="chart-hint">Click on <span>highlighted regions</span> to explore each drawdown</div>
             </div>
-            <div id="main-chart"></div>
+            <div class="chart-wrapper">
+                <div id="main-chart"></div>
+                <!-- Clickable zone overlays - positioned by JS -->
+                <div class="zone-overlay zone-2014" data-year="2014" onclick="selectDrawdown('2014')"></div>
+                <div class="zone-overlay zone-2018" data-year="2018" onclick="selectDrawdown('2018')"></div>
+                <div class="zone-overlay zone-2022" data-year="2022" onclick="selectDrawdown('2022')"></div>
+            </div>
         </div>
 
         <!-- Drawdown Selector Cards -->
@@ -992,18 +1080,61 @@
                 displayModeBar: false
             });
 
-            // Add click handler
-            document.getElementById('main-chart').on('plotly_click', function(data) {
-                const clickDate = new Date(data.points[0].x);
+            // Position the clickable zone overlays after chart renders
+            setTimeout(positionZoneOverlays, 100);
+            
+            // Reposition on window resize
+            window.addEventListener('resize', () => setTimeout(positionZoneOverlays, 50));
+            
+            // Also reposition after any Plotly relayout
+            const chartEl = document.getElementById('main-chart');
+            chartEl.on('plotly_relayout', () => setTimeout(positionZoneOverlays, 50));
+        }
+        
+        function positionZoneOverlays() {
+            const chartEl = document.getElementById('main-chart');
+            if (!chartEl || !chartEl._fullLayout) return;
+            
+            const layout = chartEl._fullLayout;
+            const xaxis = layout.xaxis;
+            const plotArea = layout._size;
+            
+            // Chart dimensions
+            const chartLeft = plotArea.l;
+            const chartWidth = plotArea.w;
+            const chartTop = plotArea.t;
+            const chartHeight = plotArea.h;
+            
+            // Date range of the full chart
+            const xMin = new Date(xaxis.range[0]).getTime();
+            const xMax = new Date(xaxis.range[1]).getTime();
+            const xRange = xMax - xMin;
+            
+            // Zone date ranges
+            const zones = [
+                { el: document.querySelector('.zone-2014'), start: '2013-11-29', end: '2015-01-14' },
+                { el: document.querySelector('.zone-2018'), start: '2017-12-17', end: '2018-12-15' },
+                { el: document.querySelector('.zone-2022'), start: '2021-11-10', end: '2022-11-21' }
+            ];
+            
+            zones.forEach(zone => {
+                if (!zone.el) return;
                 
-                // Determine which drawdown region was clicked
-                if (clickDate >= new Date('2013-11-01') && clickDate <= new Date('2015-02-01')) {
-                    selectDrawdown('2014');
-                } else if (clickDate >= new Date('2017-12-01') && clickDate <= new Date('2019-01-01')) {
-                    selectDrawdown('2018');
-                } else if (clickDate >= new Date('2021-11-01') && clickDate <= new Date('2023-01-01')) {
-                    selectDrawdown('2022');
-                }
+                const startTime = new Date(zone.start).getTime();
+                const endTime = new Date(zone.end).getTime();
+                
+                // Calculate pixel positions
+                const leftPct = (startTime - xMin) / xRange;
+                const rightPct = (endTime - xMin) / xRange;
+                
+                const leftPx = chartLeft + (leftPct * chartWidth);
+                const widthPx = (rightPct - leftPct) * chartWidth;
+                
+                // Apply styles
+                zone.el.style.left = leftPx + 'px';
+                zone.el.style.width = widthPx + 'px';
+                zone.el.style.top = chartTop + 'px';
+                zone.el.style.height = chartHeight + 'px';
             });
         }
 
