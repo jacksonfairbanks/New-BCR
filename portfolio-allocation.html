@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio Allocation | $SATA Efficient Frontier</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
         :root {
             --bg-primary: #0a0a0f;
             --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
             --border-color: #1e1e2e;
             --text-primary: #ffffff;
             --text-secondary: #a0a0b0;
@@ -20,6 +21,7 @@
             --accent-red: #ef4444;
             --accent-orange: #f7931a;
             --accent-purple: #a855f7;
+            --accent-cyan: #06b6d4;
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -111,20 +113,185 @@
             margin-top: 4px;
         }
         
-        /* Container */
-        .container {
-            max-width: 1400px;
+        /* Main Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 24px;
         }
         
-        /* Chart Cards */
+        /* Control Panel */
+        .control-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            height: fit-content;
+            position: sticky;
+            top: 24px;
+        }
+        
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .panel-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--accent-gold);
+            border-radius: 2px;
+        }
+        
+        .control-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .control-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .control-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-gold);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 153, 0, 0.4);
+        }
+        
+        /* Regime Toggle */
+        .regime-toggle {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .regime-btn {
+            flex: 1;
+            padding: 10px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .regime-btn:hover {
+            background: rgba(255, 153, 0, 0.1);
+            border-color: var(--accent-gold);
+        }
+        
+        .regime-btn.active {
+            background: rgba(255, 153, 0, 0.2);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            font-weight: 500;
+        }
+        
+        /* Stats Display */
+        .stats-box {
+            background: linear-gradient(135deg, rgba(255, 153, 0, 0.1) 0%, rgba(255, 153, 0, 0.02) 100%);
+            border: 1px solid rgba(255, 153, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 15px;
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 153, 0, 0.1);
+        }
+        
+        .stats-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stats-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        
+        .stats-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .stats-value.positive { color: var(--accent-green); }
+        .stats-value.negative { color: var(--accent-red); }
+        .stats-value.highlight { color: var(--accent-gold); }
+        
+        /* Charts Area */
+        .charts-area {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
         .chart-card {
             background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(18, 18, 26, 0.8) 100%);
             border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 24px;
-            margin-bottom: 24px;
         }
         
         .chart-header {
@@ -151,121 +318,268 @@
             margin-left: 8px;
         }
         
-        /* Coming Soon Placeholder */
-        .coming-soon {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 400px;
-            color: var(--text-muted);
+        .chart-container {
+            height: 450px;
+            width: 100%;
         }
         
-        .coming-soon .icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        .coming-soon h2 {
-            font-size: 1.5rem;
-            margin-bottom: 12px;
-            color: var(--text-secondary);
-        }
-        
-        .coming-soon p {
-            max-width: 600px;
-            text-align: center;
-            line-height: 1.6;
-        }
-        
-        /* Info Box */
-        .info-box {
-            background: rgba(255, 153, 0, 0.08);
-            border-left: 3px solid var(--accent-gold);
-            padding: 16px 20px;
-            border-radius: 0 8px 8px 0;
-            margin-bottom: 24px;
-        }
-        
-        .info-box h3 {
-            color: var(--accent-gold);
-            font-size: 1rem;
-            margin-bottom: 8px;
-        }
-        
-        .info-box p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-        
-        /* Feature Preview */
-        .feature-grid {
+        /* Comparison Cards */
+        .comparison-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 30px;
-        }
-        
-        .feature-card {
-            background: rgba(255, 153, 0, 0.05);
-            border: 1px solid rgba(255, 153, 0, 0.2);
-            border-radius: 12px;
-            padding: 24px;
-        }
-        
-        .feature-card .icon {
-            font-size: 2rem;
-            margin-bottom: 12px;
-        }
-        
-        .feature-card h4 {
-            font-size: 1rem;
-            margin-bottom: 8px;
-            color: var(--accent-gold);
-        }
-        
-        .feature-card p {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-        
-        /* Stats Preview */
-        .stats-preview {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
             gap: 16px;
-            margin-bottom: 24px;
+            margin-top: 20px;
         }
         
-        .stat-card {
-            background: rgba(255, 153, 0, 0.05);
-            border: 1px solid rgba(255, 153, 0, 0.2);
+        .comparison-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 20px;
             text-align: center;
         }
         
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--accent-gold);
-            margin-bottom: 4px;
+        .comparison-card.baseline {
+            border-color: rgba(74, 158, 255, 0.3);
+            background: rgba(74, 158, 255, 0.05);
         }
         
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
+        .comparison-card.with-sata {
+            border-color: rgba(255, 153, 0, 0.3);
+            background: rgba(255, 153, 0, 0.05);
+        }
+        
+        .comparison-card.optimal {
+            border-color: rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.05);
+        }
+        
+        .comparison-label {
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        
+        .comparison-card.baseline .comparison-label { color: var(--accent-blue); }
+        .comparison-card.with-sata .comparison-label { color: var(--accent-gold); }
+        .comparison-card.optimal .comparison-label { color: var(--accent-green); }
+        
+        .comparison-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .metric-name {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        /* Insight Box */
+        .insight-box {
+            background: rgba(255, 153, 0, 0.08);
+            border-left: 3px solid var(--accent-gold);
+            padding: 16px 20px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 20px;
+        }
+        
+        .insight-box h4 {
+            color: var(--accent-gold);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .insight-box p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        
+        /* Asset Assumptions */
+        .assumptions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.85rem;
+        }
+        
+        .assumptions-table th,
+        .assumptions-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .assumptions-table th {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+        
+        .assumptions-table td {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+        
+        .asset-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .asset-dot.stocks { background: var(--accent-blue); }
+        .asset-dot.bonds { background: var(--accent-cyan); }
+        .asset-dot.sata { background: var(--accent-gold); }
+        
+        /* Info Popup */
+        .info-trigger-wrapper {
+            position: relative;
+            display: inline-flex;
+            margin-left: 10px;
+        }
+        
+        .info-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            cursor: help;
+            transition: all 0.2s;
+        }
+        
+        .info-trigger:hover {
+            background: rgba(255, 153, 0, 0.2);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+        
+        .info-popup {
+            position: absolute;
+            top: 30px;
+            right: 0;
+            width: 320px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 100;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .info-trigger-wrapper:hover .info-popup {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .info-popup h4 {
+            color: var(--accent-gold);
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        
+        .info-popup p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+        
+        .info-popup ul {
+            list-style: none;
+            margin: 10px 0;
+        }
+        
+        .info-popup li {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .formula-box {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin: 10px 0;
+        }
+        
+        .formula-box code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-gold);
+        }
+        
+        .sharpe-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .sharpe-badge.bad { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .sharpe-badge.okay { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .sharpe-badge.good { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .sharpe-badge.great { background: rgba(74, 158, 255, 0.2); color: #4a9eff; }
+        
+        .info-note {
+            background: rgba(255, 153, 0, 0.08);
+            border-left: 2px solid var(--accent-gold);
+            padding: 8px 10px;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.75rem !important;
+            margin-top: 12px !important;
+            margin-bottom: 0 !important;
         }
         
         /* Responsive */
-        @media (max-width: 1024px) {
-            .feature-grid { grid-template-columns: 1fr; }
-            .stats-preview { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-panel {
+                position: static;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         @media (max-width: 768px) {
@@ -296,109 +610,709 @@
         </div>
     </header>
     
-    <div class="container">
-        <!-- Info Box -->
-        <div class="info-box">
-            <h3>Why Add $SATA to Your Portfolio?</h3>
-            <p>
-                $SATA offers a <strong>12% fixed annual yield</strong> backed by BTC treasury, with low correlation to traditional assets during normal market conditions.
-                This analysis shows how adding $SATA to a traditional 60/40 portfolio can potentially <em>increase returns</em> while <em>reducing volatility</em> — 
-                the diversification benefit institutional allocators seek.
-            </p>
-        </div>
-        
-        <!-- Stats Preview -->
-        <div class="stats-preview">
-            <div class="stat-card">
-                <div class="stat-value">12%</div>
-                <div class="stat-label">$SATA Annual Yield</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">~15%</div>
-                <div class="stat-label">Est. Volatility</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">0.15</div>
-                <div class="stat-label">SPY Correlation (Normal)</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">0.45</div>
-                <div class="stat-label">SPY Correlation (Stress)</div>
-            </div>
-        </div>
-        
-        <!-- Main Content Area -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">
-                    <span class="icon">📈</span>
-                    Efficient Frontier
-                    <span class="chart-subtitle">Risk/return tradeoff with $SATA allocation</span>
+    <div class="main-grid">
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="panel-title">Allocation Settings</div>
+            
+            <div class="control-section">
+                <div class="section-label">$SATA Allocation</div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>$SATA Weight in Portfolio</span>
+                        <span class="control-value" id="sata-weight-val">10%</span>
+                    </div>
+                    <input type="range" id="sata-weight" min="0" max="30" value="10" step="1">
+                </div>
+                
+                <div class="stats-box">
+                    <div class="stats-row">
+                        <span class="stats-label">Stocks</span>
+                        <span class="stats-value" id="stocks-weight">54%</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Bonds</span>
+                        <span class="stats-value" id="bonds-weight">36%</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">$SATA</span>
+                        <span class="stats-value highlight" id="sata-display">10%</span>
+                    </div>
                 </div>
             </div>
             
-            <div class="coming-soon">
-                <div class="icon">🚧</div>
-                <h2>In Development</h2>
-                <p>
-                    The efficient frontier visualization is being developed. This tool will show how different $SATA allocations 
-                    affect your portfolio's expected return and volatility, helping institutional investors make informed allocation decisions.
+            <div class="control-section">
+                <div class="section-label">Market Regime</div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                    Correlations change during market stress. Toggle to see impact.
                 </p>
-            </div>
-        </div>
-        
-        <!-- Feature Preview -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">
-                    <span class="icon">🎯</span>
-                    Planned Features
+                <div class="regime-toggle">
+                    <button class="regime-btn active" id="regime-normal" onclick="setRegime('normal')">
+                        😊 Normal
+                    </button>
+                    <button class="regime-btn" id="regime-stress" onclick="setRegime('stress')">
+                        😰 Stress
+                    </button>
                 </div>
             </div>
             
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="icon">📊</div>
-                    <h4>Interactive Frontier Chart</h4>
-                    <p>Visualize the efficient frontier curve showing optimal risk/return combinations with varying $SATA allocations from 0-20%.</p>
+            <div class="control-section">
+                <div class="section-label">Portfolio Metrics</div>
+                <div class="stats-box">
+                    <div class="stats-row">
+                        <span class="stats-label">Expected Return</span>
+                        <span class="stats-value highlight" id="exp-return">8.4%</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Volatility</span>
+                        <span class="stats-value" id="volatility">11.2%</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Sharpe Ratio</span>
+                        <span class="stats-value" id="sharpe">0.75</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">vs 60/40 Return</span>
+                        <span class="stats-value positive" id="return-diff">+1.2%</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">vs 60/40 Risk</span>
+                        <span class="stats-value positive" id="risk-diff">-0.8%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="section-label">Asset Assumptions</div>
+                <table class="assumptions-table">
+                    <tr>
+                        <th>Asset</th>
+                        <th>Return</th>
+                        <th>Vol</th>
+                    </tr>
+                    <tr>
+                        <td><span class="asset-dot stocks"></span>Stocks</td>
+                        <td>10%</td>
+                        <td>18%</td>
+                    </tr>
+                    <tr>
+                        <td><span class="asset-dot bonds"></span>Bonds</td>
+                        <td>4%</td>
+                        <td>6%</td>
+                    </tr>
+                    <tr>
+                        <td><span class="asset-dot sata"></span>$SATA</td>
+                        <td>12%</td>
+                        <td id="sata-vol-display">15%</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Charts Area -->
+        <div class="charts-area">
+            <!-- Efficient Frontier Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <span class="icon">📈</span>
+                        Efficient Frontier
+                        <span class="chart-subtitle">Risk/return tradeoff with $SATA allocation</span>
+                        <div class="info-trigger-wrapper">
+                            <span class="info-trigger">?</span>
+                            <div class="info-popup">
+                                <h4>What is the Efficient Frontier?</h4>
+                                <p>The efficient frontier shows the <strong>optimal portfolios</strong> that offer the highest expected return for each level of risk.</p>
+                                <p><strong>Reading the chart:</strong></p>
+                                <ul>
+                                    <li><span style="color: #4a9eff;">■</span> Blue square = Your baseline 60/40 portfolio</li>
+                                    <li><span style="color: #ff9900;">★</span> Gold star = Your current $SATA allocation</li>
+                                    <li><span style="color: #22c55e;">◆</span> Green diamond = Optimal (Max Sharpe)</li>
+                                </ul>
+                                <p>Moving <strong>up and left</strong> is better — more return, less risk.</p>
+                                <p class="info-note">💡 The "free lunch" of diversification happens when adding $SATA moves your portfolio up (more return) AND left (less risk).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container" id="frontier-chart"></div>
+                
+                <div class="insight-box" id="insight-box">
+                    <h4>💡 Diversification Insight</h4>
+                    <p id="insight-text">
+                        At 10% $SATA allocation, you achieve the "efficient frontier" benefit: 
+                        higher returns (+1.2%) with lower risk (-0.8%) compared to a pure 60/40 portfolio.
+                        This is the "free lunch" of diversification.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Portfolio Comparison -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <span class="icon">⚖️</span>
+                        Portfolio Comparison
+                        <span class="chart-subtitle">Baseline vs your allocation vs optimal</span>
+                    </div>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="icon">🎚️</div>
-                    <h4>Allocation Slider</h4>
-                    <p>Adjust $SATA allocation in real-time and see immediate impact on portfolio expected return, volatility, and Sharpe ratio.</p>
+                <div class="comparison-grid">
+                    <div class="comparison-card baseline">
+                        <div class="comparison-label">60/40 Baseline</div>
+                        <div class="comparison-metrics">
+                            <div class="metric">
+                                <span class="metric-name">Return</span>
+                                <span class="metric-value" id="baseline-return">7.6%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-name">Volatility</span>
+                                <span class="metric-value" id="baseline-vol">12.0%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-name">Sharpe</span>
+                                <span class="metric-value" id="baseline-sharpe">0.63</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-name">Allocation</span>
+                                <span class="metric-value" style="font-size: 0.8rem;">60% / 40% / 0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-card with-sata">
+                        <div class="comparison-label">Your Allocation</div>
+                        <div class="comparison-metrics">
+                            <div class="metric">
+                                <span class="metric-name">Return</span>
+                                <span class="metric-value" id="your-return">8.4%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-name">Volatility</span>
+                                <span class="metric-value" id="your-vol">11.2%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-name">Sharpe</span>
+                                <span class="metric-value" id="your-sharpe">0.75</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-name">Allocation</span>
+                                <span class="metric-value" id="your-allocation" style="font-size: 0.8rem;">54% / 36% / 10%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-card optimal">
+                        <div class="comparison-label">Optimal (Max Sharpe)</div>
+                        <div class="comparison-metrics">
+                            <div class="metric">
+                                <span class="metric-name">Return</span>
+                                <span class="metric-value" id="optimal-return">8.8%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-name">Volatility</span>
+                                <span class="metric-value" id="optimal-vol">10.8%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-name">Sharpe</span>
+                                <span class="metric-value" id="optimal-sharpe">0.81</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-name">Allocation</span>
+                                <span class="metric-value" id="optimal-allocation" style="font-size: 0.8rem;">48% / 32% / 20%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="icon">⚡</div>
-                    <h4>Regime Toggle</h4>
-                    <p>Switch between "Normal" and "Stress" market regimes to see how correlation changes affect diversification benefits.</p>
+            </div>
+            
+            <!-- Sharpe Ratio Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <span class="icon">📊</span>
+                        Sharpe Ratio by $SATA Allocation
+                        <span class="chart-subtitle">Risk-adjusted return optimization</span>
+                        <div class="info-trigger-wrapper">
+                            <span class="info-trigger">?</span>
+                            <div class="info-popup">
+                                <h4>What is Sharpe Ratio?</h4>
+                                <p>The Sharpe Ratio measures <strong>risk-adjusted return</strong> — how much excess return you get per unit of risk taken.</p>
+                                <div class="formula-box">
+                                    <code>Sharpe = (Return - Risk-Free Rate) / Volatility</code>
+                                </div>
+                                <p><strong>Interpretation:</strong></p>
+                                <ul>
+                                    <li><span class="sharpe-badge bad">&lt; 0.5</span> Poor risk-adjusted returns</li>
+                                    <li><span class="sharpe-badge okay">0.5 - 0.75</span> Acceptable</li>
+                                    <li><span class="sharpe-badge good">0.75 - 1.0</span> Good</li>
+                                    <li><span class="sharpe-badge great">&gt; 1.0</span> Excellent</li>
+                                </ul>
+                                <p class="info-note">💡 Higher Sharpe = better risk-adjusted performance. The optimal $SATA allocation maximizes this ratio.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="icon">📋</div>
-                    <h4>Portfolio Comparison</h4>
-                    <p>Compare your selected allocation against the baseline 60/40 portfolio — see return change, risk change, and Sharpe improvement.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="icon">💡</div>
-                    <h4>Dynamic Insights</h4>
-                    <p>Receive contextual insights explaining whether your allocation achieves "free lunch" diversification or trades off risk for return.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="icon">🏦</div>
-                    <h4>Institutional Focus</h4>
-                    <p>Designed for institutional allocators — clear metrics, professional presentation, and data-driven recommendations.</p>
-                </div>
+                <div class="chart-container" id="sharpe-chart"></div>
             </div>
         </div>
     </div>
     
     <script>
-        console.log('[Portfolio Allocation] Page loaded - efficient frontier in development');
+        // ============================================
+        // ASSET ASSUMPTIONS
+        // ============================================
+        const ASSETS = {
+            stocks: { return: 0.10, vol: 0.18, name: 'Stocks' },
+            bonds: { return: 0.04, vol: 0.06, name: 'Bonds' },
+            sata: { return: 0.12, vol: 0.15, name: '$SATA' }  // Will change with regime
+        };
+        
+        const CORRELATIONS = {
+            normal: {
+                stocks_bonds: 0.20,
+                stocks_sata: 0.15,
+                bonds_sata: 0.05
+            },
+            stress: {
+                stocks_bonds: 0.50,
+                stocks_sata: 0.45,
+                bonds_sata: 0.25
+            }
+        };
+        
+        const RISK_FREE_RATE = 0.045;  // 4.5% risk-free rate
+        
+        let currentRegime = 'normal';
+        let currentSataWeight = 10;
+        
+        // ============================================
+        // PORTFOLIO MATH
+        // ============================================
+        function getCorrelationMatrix(regime) {
+            const corr = CORRELATIONS[regime];
+            return [
+                [1.0, corr.stocks_bonds, corr.stocks_sata],
+                [corr.stocks_bonds, 1.0, corr.bonds_sata],
+                [corr.stocks_sata, corr.bonds_sata, 1.0]
+            ];
+        }
+        
+        function getSataVol(regime) {
+            return regime === 'stress' ? 0.25 : 0.15;
+        }
+        
+        function calculatePortfolioStats(stocksW, bondsW, sataW, regime) {
+            const sataVol = getSataVol(regime);
+            const weights = [stocksW, bondsW, sataW];
+            const returns = [ASSETS.stocks.return, ASSETS.bonds.return, ASSETS.sata.return];
+            const vols = [ASSETS.stocks.vol, ASSETS.bonds.vol, sataVol];
+            const corrMatrix = getCorrelationMatrix(regime);
+            
+            // Expected return
+            const expReturn = weights.reduce((sum, w, i) => sum + w * returns[i], 0);
+            
+            // Portfolio variance
+            let variance = 0;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    variance += weights[i] * weights[j] * vols[i] * vols[j] * corrMatrix[i][j];
+                }
+            }
+            const vol = Math.sqrt(variance);
+            
+            // Sharpe ratio
+            const sharpe = vol > 0 ? (expReturn - RISK_FREE_RATE) / vol : 0;
+            
+            return { expReturn, vol, sharpe };
+        }
+        
+        function generateEfficientFrontier(regime, sataWeight) {
+            const points = [];
+            const sataW = sataWeight / 100;
+            const remainingW = 1 - sataW;
+            
+            // Generate points along the frontier by varying stock/bond mix
+            for (let stockPct = 0; stockPct <= 100; stockPct += 2) {
+                const stocksW = (stockPct / 100) * remainingW;
+                const bondsW = remainingW - stocksW;
+                
+                const stats = calculatePortfolioStats(stocksW, bondsW, sataW, regime);
+                points.push({
+                    vol: stats.vol * 100,
+                    return: stats.expReturn * 100,
+                    sharpe: stats.sharpe,
+                    stocksW: stocksW * 100,
+                    bondsW: bondsW * 100,
+                    sataW: sataW * 100
+                });
+            }
+            
+            return points;
+        }
+        
+        function findOptimalPortfolio(regime) {
+            let bestSharpe = -Infinity;
+            let optimal = null;
+            
+            // Search across different SATA weights and stock/bond mixes
+            for (let sataW = 0; sataW <= 0.30; sataW += 0.01) {
+                const remaining = 1 - sataW;
+                for (let stockRatio = 0; stockRatio <= 1; stockRatio += 0.02) {
+                    const stocksW = stockRatio * remaining;
+                    const bondsW = remaining - stocksW;
+                    
+                    const stats = calculatePortfolioStats(stocksW, bondsW, sataW, regime);
+                    if (stats.sharpe > bestSharpe) {
+                        bestSharpe = stats.sharpe;
+                        optimal = {
+                            stocksW: stocksW * 100,
+                            bondsW: bondsW * 100,
+                            sataW: sataW * 100,
+                            ...stats
+                        };
+                    }
+                }
+            }
+            
+            return optimal;
+        }
+        
+        // ============================================
+        // CHART RENDERING
+        // ============================================
+        function renderFrontierChart() {
+            const sataW = currentSataWeight / 100;
+            const remainingW = 1 - sataW;
+            
+            // Generate frontiers for comparison
+            const frontierWithSata = generateEfficientFrontier(currentRegime, currentSataWeight);
+            const frontierNoSata = generateEfficientFrontier(currentRegime, 0);
+            
+            // Current allocation (60/40 scaled down by sata weight)
+            const currentStocks = 0.6 * remainingW;
+            const currentBonds = 0.4 * remainingW;
+            const currentStats = calculatePortfolioStats(currentStocks, currentBonds, sataW, currentRegime);
+            
+            // 60/40 baseline
+            const baselineStats = calculatePortfolioStats(0.6, 0.4, 0, currentRegime);
+            
+            // Optimal portfolio
+            const optimal = findOptimalPortfolio(currentRegime);
+            
+            // Calculate dynamic axis ranges
+            const allVols = [...frontierWithSata.map(p => p.vol), ...frontierNoSata.map(p => p.vol), 
+                           baselineStats.vol * 100, currentStats.vol * 100, optimal.vol * 100];
+            const allReturns = [...frontierWithSata.map(p => p.return), ...frontierNoSata.map(p => p.return),
+                              baselineStats.expReturn * 100, currentStats.expReturn * 100, optimal.expReturn * 100];
+            
+            const xMin = Math.max(0, Math.min(...allVols) - 2);
+            const xMax = Math.max(...allVols) + 2;
+            const yMin = Math.min(...allReturns) - 1;
+            const yMax = Math.max(...allReturns) + 1;
+            
+            const traces = [
+                // Frontier without SATA (60/40 line)
+                {
+                    x: frontierNoSata.map(p => p.vol),
+                    y: frontierNoSata.map(p => p.return),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'No $SATA (60/40 Line)',
+                    line: { color: 'rgba(74, 158, 255, 0.4)', width: 2, dash: 'dot' },
+                    hovertemplate: 'Vol: %{x:.1f}%<br>Return: %{y:.1f}%<extra>60/40</extra>'
+                },
+                // Frontier with SATA
+                {
+                    x: frontierWithSata.map(p => p.vol),
+                    y: frontierWithSata.map(p => p.return),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: `With ${currentSataWeight}% $SATA`,
+                    line: { color: '#ff9900', width: 3 },
+                    hovertemplate: 'Vol: %{x:.1f}%<br>Return: %{y:.1f}%<br>Sharpe: %{customdata:.2f}<extra>With $SATA</extra>',
+                    customdata: frontierWithSata.map(p => p.sharpe)
+                },
+                // 60/40 Baseline point
+                {
+                    x: [baselineStats.vol * 100],
+                    y: [baselineStats.expReturn * 100],
+                    type: 'scatter',
+                    mode: 'markers',
+                    name: '60/40 Baseline',
+                    marker: { color: '#4a9eff', size: 14, symbol: 'square' },
+                    hovertemplate: 'Vol: %{x:.1f}%<br>Return: %{y:.1f}%<br>60/40 Baseline<extra></extra>'
+                },
+                // Current allocation point
+                {
+                    x: [currentStats.vol * 100],
+                    y: [currentStats.expReturn * 100],
+                    type: 'scatter',
+                    mode: 'markers',
+                    name: 'Your Allocation',
+                    marker: { color: '#ff9900', size: 16, symbol: 'star' },
+                    hovertemplate: 'Vol: %{x:.1f}%<br>Return: %{y:.1f}%<br>Your Allocation<extra></extra>'
+                },
+                // Optimal point
+                {
+                    x: [optimal.vol * 100],
+                    y: [optimal.expReturn * 100],
+                    type: 'scatter',
+                    mode: 'markers',
+                    name: 'Optimal (Max Sharpe)',
+                    marker: { color: '#22c55e', size: 14, symbol: 'diamond' },
+                    hovertemplate: 'Vol: %{x:.1f}%<br>Return: %{y:.1f}%<br>Optimal<extra></extra>'
+                }
+            ];
+            
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Space Grotesk', color: '#a0a0b0' },
+                margin: { t: 30, r: 30, b: 60, l: 60 },
+                xaxis: {
+                    title: { text: 'Volatility (%)', font: { size: 12 } },
+                    gridcolor: '#2a2a3a',
+                    range: [xMin, xMax],
+                    tickformat: '.0f',
+                    ticksuffix: '%'
+                },
+                yaxis: {
+                    title: { text: 'Expected Return (%)', font: { size: 12 } },
+                    gridcolor: '#2a2a3a',
+                    range: [yMin, yMax],
+                    tickformat: '.0f',
+                    ticksuffix: '%'
+                },
+                legend: {
+                    x: 0.02,
+                    y: 0.98,
+                    bgcolor: 'rgba(18, 18, 26, 0.9)',
+                    bordercolor: '#2a2a3a',
+                    borderwidth: 1
+                },
+                hovermode: 'closest',
+                showlegend: true
+            };
+            
+            Plotly.newPlot('frontier-chart', traces, layout, { responsive: true });
+        }
+        
+        function renderSharpeChart() {
+            const sharpeData = [];
+            
+            for (let sataW = 0; sataW <= 30; sataW += 1) {
+                const sw = sataW / 100;
+                const remaining = 1 - sw;
+                const stocksW = 0.6 * remaining;
+                const bondsW = 0.4 * remaining;
+                
+                const stats = calculatePortfolioStats(stocksW, bondsW, sw, currentRegime);
+                sharpeData.push({
+                    sata: sataW,
+                    sharpe: stats.sharpe
+                });
+            }
+            
+            const maxSharpePoint = sharpeData.reduce((max, p) => p.sharpe > max.sharpe ? p : max, sharpeData[0]);
+            const minSharpePoint = sharpeData.reduce((min, p) => p.sharpe < min.sharpe ? p : min, sharpeData[0]);
+            const currentPoint = sharpeData.find(p => p.sata === currentSataWeight);
+            
+            // Calculate dynamic Y-axis range with padding
+            const yMin = Math.max(0, minSharpePoint.sharpe - 0.05);
+            const yMax = maxSharpePoint.sharpe + 0.05;
+            
+            const traces = [
+                {
+                    x: sharpeData.map(p => p.sata),
+                    y: sharpeData.map(p => p.sharpe),
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    fillcolor: 'rgba(255, 153, 0, 0.15)',
+                    line: { color: '#ff9900', width: 3 },
+                    name: 'Sharpe Ratio',
+                    hovertemplate: '$SATA: %{x}%<br>Sharpe: %{y:.3f}<extra></extra>'
+                },
+                {
+                    x: [currentSataWeight],
+                    y: [currentPoint ? currentPoint.sharpe : 0],
+                    type: 'scatter',
+                    mode: 'markers',
+                    name: 'Current',
+                    marker: { color: '#ff9900', size: 14, symbol: 'star' },
+                    hovertemplate: 'Your allocation: %{x}% $SATA<br>Sharpe: %{y:.3f}<extra></extra>'
+                },
+                {
+                    x: [maxSharpePoint.sata],
+                    y: [maxSharpePoint.sharpe],
+                    type: 'scatter',
+                    mode: 'markers',
+                    name: 'Optimal',
+                    marker: { color: '#22c55e', size: 12, symbol: 'diamond' },
+                    hovertemplate: 'Optimal: %{x}% $SATA<br>Sharpe: %{y:.3f}<extra></extra>'
+                }
+            ];
+            
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Space Grotesk', color: '#a0a0b0' },
+                margin: { t: 30, r: 30, b: 60, l: 60 },
+                xaxis: {
+                    title: { text: '$SATA Allocation (%)', font: { size: 12 } },
+                    gridcolor: '#2a2a3a',
+                    range: [0, 30],
+                    tickformat: '.0f',
+                    ticksuffix: '%'
+                },
+                yaxis: {
+                    title: { text: 'Sharpe Ratio', font: { size: 12 } },
+                    gridcolor: '#2a2a3a',
+                    range: [yMin, yMax],
+                    autorange: false
+                },
+                legend: {
+                    x: 0.7,
+                    y: 0.95,
+                    bgcolor: 'rgba(18, 18, 26, 0.9)',
+                    bordercolor: '#2a2a3a',
+                    borderwidth: 1
+                },
+                showlegend: true,
+                hovermode: 'closest'
+            };
+            
+            Plotly.newPlot('sharpe-chart', traces, layout, { responsive: true });
+        }
+        
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        function updateUI() {
+            const sataW = currentSataWeight / 100;
+            const remainingW = 1 - sataW;
+            const stocksW = 0.6 * remainingW;
+            const bondsW = 0.4 * remainingW;
+            
+            // Current portfolio stats
+            const stats = calculatePortfolioStats(stocksW, bondsW, sataW, currentRegime);
+            
+            // Baseline 60/40
+            const baseline = calculatePortfolioStats(0.6, 0.4, 0, currentRegime);
+            
+            // Optimal
+            const optimal = findOptimalPortfolio(currentRegime);
+            
+            // Update weight displays
+            document.getElementById('sata-weight-val').textContent = currentSataWeight + '%';
+            document.getElementById('stocks-weight').textContent = (stocksW * 100).toFixed(0) + '%';
+            document.getElementById('bonds-weight').textContent = (bondsW * 100).toFixed(0) + '%';
+            document.getElementById('sata-display').textContent = currentSataWeight + '%';
+            
+            // Update portfolio metrics
+            document.getElementById('exp-return').textContent = (stats.expReturn * 100).toFixed(1) + '%';
+            document.getElementById('volatility').textContent = (stats.vol * 100).toFixed(1) + '%';
+            document.getElementById('sharpe').textContent = stats.sharpe.toFixed(2);
+            
+            // Update diffs vs baseline
+            const returnDiff = (stats.expReturn - baseline.expReturn) * 100;
+            const riskDiff = (stats.vol - baseline.vol) * 100;
+            
+            const returnDiffEl = document.getElementById('return-diff');
+            returnDiffEl.textContent = (returnDiff >= 0 ? '+' : '') + returnDiff.toFixed(1) + '%';
+            returnDiffEl.className = 'stats-value ' + (returnDiff >= 0 ? 'positive' : 'negative');
+            
+            const riskDiffEl = document.getElementById('risk-diff');
+            riskDiffEl.textContent = (riskDiff >= 0 ? '+' : '') + riskDiff.toFixed(1) + '%';
+            riskDiffEl.className = 'stats-value ' + (riskDiff <= 0 ? 'positive' : 'negative');
+            
+            // Update SATA volatility display
+            document.getElementById('sata-vol-display').textContent = (getSataVol(currentRegime) * 100) + '%';
+            
+            // Update comparison cards
+            // Baseline
+            document.getElementById('baseline-return').textContent = (baseline.expReturn * 100).toFixed(1) + '%';
+            document.getElementById('baseline-vol').textContent = (baseline.vol * 100).toFixed(1) + '%';
+            document.getElementById('baseline-sharpe').textContent = baseline.sharpe.toFixed(2);
+            
+            // Your allocation
+            document.getElementById('your-return').textContent = (stats.expReturn * 100).toFixed(1) + '%';
+            document.getElementById('your-vol').textContent = (stats.vol * 100).toFixed(1) + '%';
+            document.getElementById('your-sharpe').textContent = stats.sharpe.toFixed(2);
+            document.getElementById('your-allocation').textContent = 
+                `${(stocksW * 100).toFixed(0)}% / ${(bondsW * 100).toFixed(0)}% / ${currentSataWeight}%`;
+            
+            // Optimal
+            document.getElementById('optimal-return').textContent = (optimal.expReturn * 100).toFixed(1) + '%';
+            document.getElementById('optimal-vol').textContent = (optimal.vol * 100).toFixed(1) + '%';
+            document.getElementById('optimal-sharpe').textContent = optimal.sharpe.toFixed(2);
+            document.getElementById('optimal-allocation').textContent = 
+                `${optimal.stocksW.toFixed(0)}% / ${optimal.bondsW.toFixed(0)}% / ${optimal.sataW.toFixed(0)}%`;
+            
+            // Update insight
+            updateInsight(stats, baseline, returnDiff, riskDiff);
+            
+            // Render charts
+            renderFrontierChart();
+            renderSharpeChart();
+        }
+        
+        function updateInsight(stats, baseline, returnDiff, riskDiff) {
+            const insightEl = document.getElementById('insight-text');
+            let insight = '';
+            
+            if (currentSataWeight === 0) {
+                insight = `At 0% $SATA allocation, you have a standard 60/40 portfolio. ` +
+                    `Consider adding $SATA to potentially improve risk-adjusted returns through diversification.`;
+            } else if (returnDiff > 0 && riskDiff <= 0) {
+                insight = `🎯 <strong>Free Lunch!</strong> At ${currentSataWeight}% $SATA allocation, you achieve ` +
+                    `<strong>higher returns (+${returnDiff.toFixed(1)}%)</strong> with ` +
+                    `<strong>lower risk (${riskDiff.toFixed(1)}%)</strong> compared to a pure 60/40 portfolio. ` +
+                    `This is the ideal diversification outcome.`;
+            } else if (returnDiff > 0 && riskDiff > 0) {
+                insight = `At ${currentSataWeight}% $SATA, you're taking on more risk (+${riskDiff.toFixed(1)}%) ` +
+                    `for higher returns (+${returnDiff.toFixed(1)}%). The Sharpe ratio of ${stats.sharpe.toFixed(2)} ` +
+                    `${stats.sharpe > baseline.sharpe ? 'is still better than' : 'is lower than'} the baseline (${baseline.sharpe.toFixed(2)}).`;
+            } else if (returnDiff <= 0 && riskDiff < 0) {
+                insight = `At ${currentSataWeight}% $SATA, you're reducing risk (${riskDiff.toFixed(1)}%) ` +
+                    `but also reducing returns (${returnDiff.toFixed(1)}%). This may be appropriate for conservative allocations.`;
+            } else {
+                insight = `At ${currentSataWeight}% $SATA allocation, your portfolio has an expected return of ` +
+                    `${(stats.expReturn * 100).toFixed(1)}% and volatility of ${(stats.vol * 100).toFixed(1)}%.`;
+            }
+            
+            if (currentRegime === 'stress') {
+                insight += ` <em style="color: var(--accent-red);">Note: In stress regime, correlations rise and $SATA volatility increases to 25%, reducing diversification benefits.</em>`;
+            }
+            
+            insightEl.innerHTML = insight;
+        }
+        
+        function setRegime(regime) {
+            currentRegime = regime;
+            
+            document.getElementById('regime-normal').classList.toggle('active', regime === 'normal');
+            document.getElementById('regime-stress').classList.toggle('active', regime === 'stress');
+            
+            updateUI();
+        }
+        
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        document.getElementById('sata-weight').addEventListener('input', (e) => {
+            currentSataWeight = parseInt(e.target.value);
+            updateUI();
+        });
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+        });
     </script>
 </body>
 </html>
-
