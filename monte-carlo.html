@@ -1415,9 +1415,17 @@
                         <div class="stat-label">
                             Implied BCR
                             <span class="stat-info-icon">?</span>
-                            <div class="stat-tooltip">
+                            <div class="stat-tooltip" style="width: 320px;">
                                 <div class="stat-tooltip-title">Balance Sheet Coverage Ratio</div>
-                                Years of dividend runway if BTC price stayed flat. BCR = BTC Reserves ÷ Annual Dividend. Higher BCR = more conservative position.
+                                <div style="margin-bottom: 8px;">Normalizes exposure across different capital structures.</div>
+                                <div style="background: rgba(247, 147, 26, 0.1); padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 0.75rem;">
+                                    <strong>Example:</strong><br>
+                                    25% amplification at 10% dividend = 40x BCR<br>
+                                    50% amplification at 5% dividend = 40x BCR
+                                </div>
+                                <div style="font-size: 0.7rem; color: #888; margin-bottom: 8px;">
+                                    BCR = BTC Reserves ($) ÷ Annual Dividend Obligations
+                                </div>
                                 <div class="stat-tooltip-why"><strong>Why it matters:</strong> The key solvency metric—how long you can survive before needing BTC appreciation.</div>
                             </div>
                         </div>
@@ -2389,7 +2397,7 @@ Initial BCR check = NAV/AnnualDiv = $${(navInitial/1e6).toFixed(1)}M / $${(annua
             const horizonYears = parseInt(document.getElementById('horizon').value);
             const ppeLeverage = 1 / (targetBCR * divRate);
             const ppePct = ppeLeverage * 100;
-            document.getElementById('stat-amplification').textContent = ppePct.toFixed(1) + '%';
+            document.getElementById('stat-amplification').textContent = targetBCR.toFixed(1) + 'x';
 
             // Update context line
             const contextLine = document.getElementById('context-line');
