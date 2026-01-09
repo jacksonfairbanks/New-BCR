@@ -1415,18 +1415,42 @@
                         <div class="stat-label">
                             Implied BCR
                             <span class="stat-info-icon">?</span>
-                            <div class="stat-tooltip" style="width: 320px;">
-                                <div class="stat-tooltip-title">Balance Sheet Coverage Ratio</div>
-                                <div style="margin-bottom: 8px;">Normalizes exposure across different capital structures.</div>
-                                <div style="background: rgba(247, 147, 26, 0.1); padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 0.75rem;">
-                                    <strong>Example:</strong><br>
+                            <div class="stat-tooltip" style="width: 340px;">
+                                <strong style="color: var(--accent-orange); font-size: 0.85rem;">Balance Sheet Coverage Ratio</strong>
+                                <div style="margin-top: 6px; font-size: 0.75rem; color: #a0a0b0;">
+                                    Normalizes exposure across different capital structures.
+                                </div>
+                                <div style="background: rgba(247, 147, 26, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 0.7rem; border-left: 3px solid var(--accent-orange);">
+                                    <strong style="color: var(--accent-orange);">Example:</strong><br>
                                     25% amplification at 10% dividend = 40x BCR<br>
                                     50% amplification at 5% dividend = 40x BCR
                                 </div>
-                                <div style="font-size: 0.7rem; color: #888; margin-bottom: 8px;">
+                                <div style="font-size: 0.65rem; color: #888; margin-bottom: 10px;">
                                     BCR = BTC Reserves ($) ÷ Annual Dividend Obligations
                                 </div>
-                                <div class="stat-tooltip-why"><strong>Why it matters:</strong> The key solvency metric—how long you can survive before needing BTC appreciation.</div>
+                                <div class="bcr-table-toggle" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('show'); this.querySelector('.toggle-arrow').style.transform = this.nextElementSibling.classList.contains('show') ? 'rotate(90deg)' : 'rotate(0)'">
+                                    📊 BCR Reference Table <span class="toggle-arrow">▶</span>
+                                </div>
+                                <div class="bcr-table-collapsible">
+                                    <table class="bcr-mini-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Amp ↓ \ Div →</th>
+                                                <th>5%</th>
+                                                <th>10%</th>
+                                                <th>15%</th>
+                                                <th>20%</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td>10%</td><td>200x</td><td>100x</td><td>67x</td><td>50x</td></tr>
+                                            <tr><td>20%</td><td>100x</td><td>50x</td><td>33x</td><td>25x</td></tr>
+                                            <tr class="highlight-row"><td>25%</td><td>80x</td><td class="highlight-cell">40x</td><td>27x</td><td>20x</td></tr>
+                                            <tr><td>50%</td><td>40x</td><td>20x</td><td>13x</td><td>10x</td></tr>
+                                            <tr><td>100%</td><td>20x</td><td>10x</td><td>7x</td><td>5x</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                         <div class="stat-value orange" id="stat-amplification">—</div>
