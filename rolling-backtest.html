@@ -588,13 +588,8 @@
 
     <script>
         // ============================================
-        // EMBEDDED BTC HISTORICAL DATA
+        // BTC DATA - loaded from js/btc-data.js
         // ============================================
-        const BTC_RAW_DATA = [{"d":"17-Sep-14","c":457.33},{"d":"18-Sep-14","c":424.44},{"d":"19-Sep-14","c":394.8},{"d":"20-Sep-14","c":408.9},{"d":"21-Sep-14","c":398.82},{"d":"22-Sep-14","c":402.15},{"d":"23-Sep-14","c":435.79},{"d":"24-Sep-14","c":423.2},{"d":"25-Sep-14","c":411.57},{"d":"26-Sep-14","c":404.42},{"d":"27-Sep-14","c":399.52},{"d":"28-Sep-14","c":377.18},{"d":"29-Sep-14","c":375.47},{"d":"30-Sep-14","c":386.94},{"d":"1-Oct-14","c":383.61},{"d":"2-Oct-14","c":375.07},{"d":"3-Oct-14","c":359.51},{"d":"4-Oct-14","c":328.87},{"d":"5-Oct-14","c":320.51},{"d":"6-Oct-14","c":330.08},{"d":"7-Oct-14","c":336.19},{"d":"8-Oct-14","c":352.94},{"d":"9-Oct-14","c":365.03},{"d":"10-Oct-14","c":361.56},{"d":"11-Oct-14","c":362.3},{"d":"12-Oct-14","c":378.55},{"d":"13-Oct-14","c":390.41},{"d":"14-Oct-14","c":400.87},{"d":"15-Oct-14","c":394.77},{"d":"16-Oct-14","c":382.56},{"d":"17-Oct-14","c":383.76},{"d":"18-Oct-14","c":391.44},{"d":"19-Oct-14","c":389.55},{"d":"20-Oct-14","c":382.8},{"d":"21-Oct-14","c":378.22},{"d":"22-Oct-14","c":354.1},{"d":"23-Oct-14","c":351.88},{"d":"24-Oct-14","c":346.72},{"d":"25-Oct-14","c":350.47},{"d":"26-Oct-14","c":352.65},{"d":"27-Oct-14","c":353.47},{"d":"28-Oct-14","c":355.93},{"d":"29-Oct-14","c":345.27},{"d":"30-Oct-14","c":338.31},{"d":"31-Oct-14","c":338.32}];
-        
-        // We'll load the full data from the main file - for now using a subset
-        // The full data will be copied from btc-treasury-risk-model.html
-        
         let monthlyData = [];
         let backtestResult = null;
 
@@ -616,10 +611,18 @@
         }
 
         function loadData() {
+            // Use data from shared js/btc-data.js
+            const rawData = window.BTC_RAW_DATA;
+            
+            if (!rawData || rawData.length === 0) {
+                console.error('BTC_RAW_DATA not loaded from js/btc-data.js');
+                return false;
+            }
+            
             // Group daily data by month (use last price of each month)
             const monthMap = new Map();
             
-            BTC_RAW_DATA.forEach(item => {
+            rawData.forEach(item => {
                 const date = parseDate(item.d);
                 const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
                 
@@ -631,6 +634,14 @@
             monthlyData = Array.from(monthMap.values()).sort((a, b) => a.date - b.date);
             console.log(`Loaded ${monthlyData.length} months of data`);
             console.log(`Date range: ${monthlyData[0].date.toDateString()} to ${monthlyData[monthlyData.length-1].date.toDateString()}`);
+            
+            // Update data range display
+            const startDate = monthlyData[0].date;
+            const endDate = monthlyData[monthlyData.length - 1].date;
+            document.getElementById('data-range').textContent = 
+                `Data available: ${startDate.toLocaleDateString('en-US', {month: 'short', year: 'numeric'})} - ${endDate.toLocaleDateString('en-US', {month: 'short', year: 'numeric'})}`;
+            
+            return true;
         }
 
         // ============================================
@@ -1134,26 +1145,37 @@
             });
         });
 
-        // Initialize
-        loadData();
-        updateImpliedBCR();
-
-        // Empty chart
-        Plotly.newPlot('paths-chart', [], {
-            paper_bgcolor: 'rgba(0,0,0,0)',
-            plot_bgcolor: 'rgba(0,0,0,0)',
-            font: { family: 'Space Grotesk', color: '#a0a0b0' },
-            margin: { t: 20, r: 30, b: 50, l: 70 },
-            xaxis: { gridcolor: '#2a2a3a' },
-            yaxis: { gridcolor: '#2a2a3a' },
-            annotations: [{
-                text: 'Run backtest to see results',
-                xref: 'paper', yref: 'paper',
-                x: 0.5, y: 0.5,
-                showarrow: false,
-                font: { size: 16, color: '#606070' }
-            }]
-        }, { responsive: true });
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[Rolling Backtest] Initializing...');
+            
+            // Wait a moment for btc-data.js to load
+            setTimeout(() => {
+                if (loadData()) {
+                    updateImpliedBCR();
+                    // Auto-run backtest on page load
+                    console.log('[Rolling Backtest] Auto-running initial backtest...');
+                    runBacktest();
+                } else {
+                    // Show error in chart
+                    Plotly.newPlot('paths-chart', [], {
+                        paper_bgcolor: 'rgba(0,0,0,0)',
+                        plot_bgcolor: 'rgba(0,0,0,0)',
+                        font: { family: 'Space Grotesk', color: '#a0a0b0' },
+                        margin: { t: 20, r: 30, b: 50, l: 70 },
+                        xaxis: { gridcolor: '#2a2a3a' },
+                        yaxis: { gridcolor: '#2a2a3a' },
+                        annotations: [{
+                            text: 'Error: BTC data not loaded. Check console.',
+                            xref: 'paper', yref: 'paper',
+                            x: 0.5, y: 0.5,
+                            showarrow: false,
+                            font: { size: 16, color: '#e74c3c' }
+                        }]
+                    }, { responsive: true });
+                }
+            }, 100);
+        });
     </script>
 </body>
 </html>
